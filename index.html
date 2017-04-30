@@ -24,6 +24,9 @@
 <div id='map'></div>
 
 <script>
+    var location_polling_interval = 5000;
+    var players_polling_interval = 5000;
+
     var defaultLoc = L.latLng(52.185, 0.176); // a default view of Cambridge
     var map = L.map('map').setView(defaultLoc,16);
 
@@ -43,8 +46,7 @@
     map.on('locationerror', onLocationError);
     requestLocation();
     requestPlayersString();
-    setInterval(requestLocation,5000);
-    setInterval(requestPlayersString,5000);
+    setInterval(requestPlayersString,players_polling_interval);
 
     addCurrentPlayerSprites();
 
@@ -63,6 +65,7 @@
         player.loc.lng = e.latlng.lng;
         updateAllPlayersSprites();
         map.panTo(player.loc); // TODO: don't always want to follow the current user
+        setTimeout(requestLocation,location_polling_interval); // (only request again when succeeded)
     }
 
     function onLocationError(e) {
