@@ -24,19 +24,63 @@
 <div id='map'></div>
 
 <script>
+    var defaultLoc = L.latLng(52.185, 0.176); // a default view of Cambridge
+    var map = L.map('map').setView(defaultLoc,16);
+
+    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+        maxZoom: 18,
+        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+            '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+            'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+        id: 'mapbox.streets'
+        }).addTo(map);
+
+    var player = new Player( Math.random().toString(36).substring(7), defaultLoc );
+    var players = [];
+    var other_players_sprites = [];
+
+    map.on('locationfound', onLocationFound);
+    map.on('locationerror', onLocationError);
+    requestLocation();
+    requestPlayersString();
+    setInterval(requestLocation,5000);
+    setInterval(requestPlayersString,5000);
+
+    addCurrentPlayerSprites();
+
+    processPlayersString('0,klau,52.1855,0.1762\n0,foo,52.1851,0.1767\n'); // DEBUG
+
+    // ----------------------------------------------------------------------------
+
+    function Player(id, loc) {
+        this.id = id;
+        this.loc = loc;
+    }
+
     function onLocationFound(e) {
         sendLocation(e.latlng);
+        player.loc.lat = e.latlng.lat;
+        player.loc.lng = e.latlng.lng;
+        updateAllPlayersSprites();
+        map.panTo(player.loc); // TODO: don't always want to follow the current user
     }
 
     function onLocationError(e) {
-        alert(e);
+        alert(e.message);
+    }
+
+    function sendLocation(latlng) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://geofun.org.uk:8081/insert", true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send("user="+player.id+"&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6));
     }
 
     function requestLocation() {
         map.locate();
     }
 
-    function requestUsers() {
+    function requestPlayersString() {
         var HttpClient = function() {
             this.get = function(url, callback) {
                 var xhr = new XMLHttpRequest();
@@ -49,57 +93,78 @@
             }
         }
         var client = new HttpClient();
-        client.get('https://geofun.org.uk:8081/', function(response) {
-                for(var i=0;i<current_layers.length;i++) {
-                    map.removeLayer(current_layers[i])
-                }
-                current_markers = [];
-                var lines = response.split('\n');
-                users = [];
-                for(var i=0;i<lines.length-1;i++) {
-                    var parts = lines[i].split(',');
-                    users[i] = { id: parts[1], latlng: L.latLng(parseFloat(parts[2]),parseFloat(parts[3])) };
-                    var marker = L.marker(users[i].latlng);
-                    marker.addTo(map);
-                    marker.bindPopup(lines[i]);
-                    current_layers.push(marker);
-                    var circle = L.circle(users[i].latlng,20);
-                    circle.addTo(map);
-                    current_layers.push(circle);
-                }
-            });
+        client.get('https://geofun.org.uk:8081/', processPlayersString);
     }
 
-    function sendLocation(latlng) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://geofun.org.uk:8081/insert", true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.send("user="+userID+"&latitude="+latlng.lat.toFixed(6)+"&longitude="+latlng.lng.toFixed(6));
+    function processPlayersString(response) {
+        parsePlayersString(response);
+        updateOtherPlayersSprites();
     }
 
-    // -------------------------------------------------------------------------
+    function parsePlayersString(response) {
+        players = [];
+        var lines = response.split('\n');
+        for(var i=0;i<lines.length-1;i++) {
+            var parts = lines[i].split(',');
+            players[i] = new Player( parts[1], L.latLng(parseFloat(parts[2]),parseFloat(parts[3])) );
+        }
+    }
 
-    var map = L.map('map').fitWorld();
+    function updateAllPlayersSprites() {
+        updateCurrentPlayerSprites();
+        updateOtherPlayersSprites();
+    }
 
-    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-        maxZoom: 18,
-        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-            '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-            'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-        id: 'mapbox.streets'
-        }).addTo(map);
+    function updateOtherPlayersSprites() {
+        removeOtherPlayersSprites();
+        addOtherPlayersSprites();
+    }
 
-    var userID = Math.random().toString(36).substring(7);
-    var users = [];
-    var current_layers = [];
-    map.on('locationfound', onLocationFound);
-    map.on('locationerror', onLocationError);
-    map.setView(L.latLng(52.185, 0.176),16); // a default view of Cambridge
-    requestUsers();
-    requestLocation();
-    setInterval(requestLocation,5000);
-    setInterval(requestUsers,5000);
+    function removeOtherPlayersSprites() {
+        for(var i=0;i<other_players_sprites.length;i++) {
+            map.removeLayer(other_players_sprites[i])
+        }
+        other_players_sprites = [];
+    }
 
+    function addOtherPlayersSprites() {
+        for(var i=0;i<players.length;i++) {
+            if(players[i].id !== player.id ) {
+                var marker = L.marker(players[i].loc);
+                marker.addTo(map);
+                marker.bindPopup(getOtherPlayerPopupText(players[i]));
+                other_players_sprites.push(marker);
+                var circle = L.circle(players[i].loc,20);
+                circle.addTo(map);
+                other_players_sprites.push(circle);
+            }
+        }
+    }
+
+    function getOtherPlayerPopupText(p) {
+        return p.id+" "+p.loc.distanceTo(player.loc).toFixed(0)+"m";
+    }
+
+    function addCurrentPlayerSprites() {
+        var greenIcon = new L.Icon({
+          iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+        current_player_marker = L.marker(player.loc,{icon: greenIcon});
+        current_player_marker.addTo(map);
+        current_player_marker.bindPopup(player.id+" (you)");
+        current_player_circle = L.circle(player.loc,30);
+        current_player_circle.addTo(map);
+    }
+
+    function updateCurrentPlayerSprites() {
+        current_player_marker.update();
+        current_player_circle.redraw();
+    }
 </script>
 
 </body>
