@@ -36,7 +36,7 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
         '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
         'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-    id: 'mapbox.streets'
+    id: 'mapbox.light'
     }).addTo(map);
 
 var player = new Player( Math.random().toString(36).substring(7), defaultLoc );
@@ -159,7 +159,9 @@ function getDistanceAsString(m) {
 }
 
 function getOtherPlayerPopupText(p) {
-    return p.id + " " + getDistanceAsString(p.loc.distanceTo(player.loc));
+    var link = 'https://www.google.com/maps/dir//'+p.loc.lat.toFixed(6)+','+p.loc.lng.toFixed(6);
+    var dist = getDistanceAsString(p.loc.distanceTo(player.loc));
+    return p.id+' <a href="'+link+'">'+dist+'</a>';
 }
 
 function addCurrentPlayerSprites() {
