@@ -24,9 +24,12 @@
 <div id='map'></div>
 
 <script>
-var location_polling_interval = 5000;
-var players_string_polling_interval = 5000;
-var animation_interval = 30;
+var location_polling_interval_ms = 5000;
+var players_string_polling_interval_ms = 5000;
+var pulse_interval_ms = 3000;
+var animation_interval_ms = 30;
+var pulse_speed_m_per_s = 100;
+var pulse_distance_m = 70;
 
 var defaultLoc = L.latLng(52.185, 0.176); // a default view of Cambridge
 var map = L.map('map').setView(defaultLoc,16);
@@ -42,14 +45,16 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
 var player = new Player( Math.random().toString(36).substring(7), defaultLoc );
 var players = [];
 var other_players_sprites = [];
-var animated_sprites = [];
+var pulses = [];
+var did_pan_once = false;
 
 map.on('locationfound', onLocationFound);
 map.on('locationerror', onLocationError);
 requestLocation();
 requestPlayersString();
-setInterval(requestPlayersString,players_string_polling_interval);
-setInterval(animateSprites,animation_interval);
+setInterval(requestPlayersString,players_string_polling_interval_ms);
+setInterval(animatePulses,animation_interval_ms);
+setInterval(function() { playerPulse(); }, pulse_interval_ms );
 
 addCurrentPlayerSprites();
 
@@ -63,12 +68,11 @@ function Player(id, loc) {
 }
 
 function onLocationFound(e) {
-    addLocationEvent(player.loc);
     player.loc.lat = e.latlng.lat;
     player.loc.lng = e.latlng.lng;
     updateAllPlayersSprites();
-    map.panTo(player.loc); // TODO: don't always want to follow the current user
-    setTimeout(requestLocation,location_polling_interval); // (only request again when succeeded)
+    if(!did_pan_once) { did_pan_once = true; map.panTo(player.loc); }
+    setTimeout(requestLocation,location_polling_interval_ms); // (only request again when succeeded)
     sendLocation(e.latlng);
 }
 
@@ -185,35 +189,61 @@ function updateCurrentPlayerSprites() {
     current_player_circle.redraw();
 }
 
-function addLocationEvent(loc){
-    animated_sprites.push({ loc:loc, state:0});
+function Pulse(loc,start_time_ms) {
+    this.loc = loc;
+    this.state = 0;
+    this.start_time_ms = start_time_ms;
 }
 
-function animateSprites() {
-    for(var i=animated_sprites.length-1;i>=0;i--) {
-        var remove = animateSprite(animated_sprites[i]);
-        if( remove ) {
-            animated_sprites.splice(i,1);
+function playerPulse(){
+    var time_now_ms = new Date().getTime();
+    pulses.push(new Pulse( player.loc, time_now_ms ));
+    // trigger a chain reaction of events by proximity
+    for(var i=0;i<players.length;i++) {
+        if(players[i].id !== player.id) {
+            var m = players[i].loc.distanceTo(player.loc);
+            if( m < pulse_distance_m ) {
+                var delay_ms = 1000 * ( m / pulse_speed_m_per_s );
+                pulses.push(new Pulse( players[i].loc, time_now_ms+delay_ms ));                
+            }
         }
     }
 }
 
-function animateSprite(sprite) {
-    var remove = false;
-    if(sprite.state == 0) {
-        sprite.circle = L.circle(sprite.loc, 5);
-        sprite.circle.addTo(map);
+function animatePulses() {
+    for(var i=pulses.length-1;i>=0;i--) {
+        var remove = animatePulse(pulses[i]);
+        if( remove ) {
+            pulses.splice(i,1);
+        }
     }
-    else if(sprite.state >= 20) {
-        map.removeLayer(sprite.circle);
-        remove = true;
+}
+
+function animatePulse(pulse) {
+    var remove = false;
+    var time_now_ms = new Date().getTime();
+    if(pulse.state == 0) {
+        if(time_now_ms>pulse.start_time_ms) {
+            pulse.circle = L.circle(pulse.loc, 5);
+            pulse.circle.addTo(map);
+            pulse.state = 1;
+        }
     }
     else {
-        sprite.circle.setRadius(sprite.circle.getRadius()+4);
-        sprite.circle.setStyle({opacity: sprite.circle.options.opacity*0.9, fillOpacity: sprite.circle.options.fillOpacity*0.9});
-        sprite.circle.redraw();
+        if(pulse.circle.getRadius() > pulse_distance_m) {
+            map.removeLayer(pulse.circle);
+            remove = true;
+        }
+        else {
+            var elapsed_time_s = ( time_now_ms - pulse.start_time_ms ) / 1000;
+            var new_radius = 5 + elapsed_time_s * pulse_speed_m_per_s;
+            var new_opacity = 1 - new_radius / pulse_distance_m;
+            var new_fill_opacity = 0.4 * new_opacity;
+            pulse.circle.setRadius(new_radius);
+            pulse.circle.setStyle({opacity: new_opacity, fillOpacity: new_fill_opacity});
+            pulse.circle.redraw();
+        }
     }
-    sprite.state++;
     return remove;
 }
 </script>
