@@ -24,160 +24,196 @@
 <div id='map'></div>
 
 <script>
-    var location_polling_interval = 5000;
-    var players_polling_interval = 5000;
+var location_polling_interval = 5000;
+var players_string_polling_interval = 5000;
+var animation_interval = 30;
 
-    var defaultLoc = L.latLng(52.185, 0.176); // a default view of Cambridge
-    var map = L.map('map').setView(defaultLoc,16);
+var defaultLoc = L.latLng(52.185, 0.176); // a default view of Cambridge
+var map = L.map('map').setView(defaultLoc,16);
 
-    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-        maxZoom: 18,
-        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-            '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-            'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-        id: 'mapbox.streets'
-        }).addTo(map);
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+    maxZoom: 18,
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+        '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+        'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    id: 'mapbox.streets'
+    }).addTo(map);
 
-    var player = new Player( Math.random().toString(36).substring(7), defaultLoc );
-    var players = [];
-    var other_players_sprites = [];
+var player = new Player( Math.random().toString(36).substring(7), defaultLoc );
+var players = [];
+var other_players_sprites = [];
+var animated_sprites = [];
 
-    map.on('locationfound', onLocationFound);
-    map.on('locationerror', onLocationError);
-    requestLocation();
-    requestPlayersString();
-    setInterval(requestPlayersString,players_polling_interval);
+map.on('locationfound', onLocationFound);
+map.on('locationerror', onLocationError);
+requestLocation();
+requestPlayersString();
+setInterval(requestPlayersString,players_string_polling_interval);
+setInterval(animateSprites,animation_interval);
 
-    addCurrentPlayerSprites();
+addCurrentPlayerSprites();
 
-    processPlayersString('0,klau,52.1855,0.1762\n0,foo,52.1851,0.1767\n'); // DEBUG
+processPlayersString('0,klau,52.1855,0.1762\n0,foo,52.1851,0.1767\n'); // DEBUG
 
-    // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-    function Player(id, loc) {
-        this.id = id;
-        this.loc = loc;
-    }
+function Player(id, loc) {
+    this.id = id;
+    this.loc = loc;
+}
 
-    function onLocationFound(e) {
-        sendLocation(e.latlng);
-        player.loc.lat = e.latlng.lat;
-        player.loc.lng = e.latlng.lng;
-        updateAllPlayersSprites();
-        map.panTo(player.loc); // TODO: don't always want to follow the current user
-        setTimeout(requestLocation,location_polling_interval); // (only request again when succeeded)
-    }
+function onLocationFound(e) {
+    addLocationEvent(player.loc);
+    player.loc.lat = e.latlng.lat;
+    player.loc.lng = e.latlng.lng;
+    updateAllPlayersSprites();
+    map.panTo(player.loc); // TODO: don't always want to follow the current user
+    setTimeout(requestLocation,location_polling_interval); // (only request again when succeeded)
+    sendLocation(e.latlng);
+}
 
-    function onLocationError(e) {
-        alert(e.message);
-    }
+function onLocationError(e) {
+    alert(e.message);
+}
 
-    function sendLocation(latlng) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://geofun.org.uk:8081/insert", true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.send("user="+player.id+"&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6));
-    }
+function sendLocation(latlng) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "https://geofun.org.uk:8081/insert", true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.send("user="+player.id+"&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6));
+}
 
-    function requestLocation() {
-        map.locate();
-    }
+function requestLocation() {
+    map.locate();
+}
 
-    function requestPlayersString() {
-        var HttpClient = function() {
-            this.get = function(url, callback) {
-                var xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState == 4 && xhr.status == 200)
-                        callback(xhr.responseText);
-                }
-                xhr.open( "GET", url, true );
-                xhr.send( null );
+function requestPlayersString() {
+    var HttpClient = function() {
+        this.get = function(url, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200)
+                    callback(xhr.responseText);
             }
-        }
-        var client = new HttpClient();
-        client.get('https://geofun.org.uk:8081/', processPlayersString);
-    }
-
-    function processPlayersString(response) {
-        parsePlayersString(response);
-        updateOtherPlayersSprites();
-    }
-
-    function parsePlayersString(response) {
-        players = [];
-        var lines = response.split('\n');
-        for(var i=0;i<lines.length-1;i++) {
-            var parts = lines[i].split(',');
-            players[i] = new Player( parts[1], L.latLng(parseFloat(parts[2]),parseFloat(parts[3])) );
+            xhr.open( "GET", url, true );
+            xhr.send( null );
         }
     }
+    var client = new HttpClient();
+    client.get('https://geofun.org.uk:8081/', processPlayersString);
+}
 
-    function updateAllPlayersSprites() {
-        updateCurrentPlayerSprites();
-        updateOtherPlayersSprites();
+function processPlayersString(response) {
+    parsePlayersString(response);
+    updateOtherPlayersSprites();
+}
+
+function parsePlayersString(response) {
+    players = [];
+    var lines = response.split('\n');
+    for(var i=0;i<lines.length-1;i++) {
+        var parts = lines[i].split(',');
+        players[i] = new Player( parts[1], L.latLng(parseFloat(parts[2]),parseFloat(parts[3])) );
     }
+}
 
-    function updateOtherPlayersSprites() {
-        removeOtherPlayersSprites();
-        addOtherPlayersSprites();
+function updateAllPlayersSprites() {
+    updateCurrentPlayerSprites();
+    updateOtherPlayersSprites();
+}
+
+function updateOtherPlayersSprites() {
+    removeOtherPlayersSprites();
+    addOtherPlayersSprites();
+}
+
+function removeOtherPlayersSprites() {
+    for(var i=0;i<other_players_sprites.length;i++) {
+        map.removeLayer(other_players_sprites[i])
     }
+    other_players_sprites = [];
+}
 
-    function removeOtherPlayersSprites() {
-        for(var i=0;i<other_players_sprites.length;i++) {
-            map.removeLayer(other_players_sprites[i])
+function addOtherPlayersSprites() {
+    for(var i=0;i<players.length;i++) {
+        if(players[i].id !== player.id ) {
+            var marker = L.marker(players[i].loc);
+            marker.addTo(map);
+            marker.bindPopup(getOtherPlayerPopupText(players[i]));
+            other_players_sprites.push(marker);
+            var circle = L.circle(players[i].loc,20);
+            circle.addTo(map);
+            other_players_sprites.push(circle);
         }
-        other_players_sprites = [];
     }
+}
 
-    function addOtherPlayersSprites() {
-        for(var i=0;i<players.length;i++) {
-            if(players[i].id !== player.id ) {
-                var marker = L.marker(players[i].loc);
-                marker.addTo(map);
-                marker.bindPopup(getOtherPlayerPopupText(players[i]));
-                other_players_sprites.push(marker);
-                var circle = L.circle(players[i].loc,20);
-                circle.addTo(map);
-                other_players_sprites.push(circle);
-            }
+function getDistanceAsString(m) {
+    if(m >= 1000) {
+        var km = m/1000;
+        return km.toFixed(0)+"km";
+    }
+    else {
+        return m.toFixed(0)+"m";
+    }
+}
+
+function getOtherPlayerPopupText(p) {
+    return p.id + " " + getDistanceAsString(p.loc.distanceTo(player.loc));
+}
+
+function addCurrentPlayerSprites() {
+    var greenIcon = new L.Icon({
+      iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+    current_player_marker = L.marker(player.loc,{icon: greenIcon});
+    current_player_marker.addTo(map);
+    current_player_marker.bindPopup(player.id+" (you)");
+    current_player_circle = L.circle(player.loc,30);
+    current_player_circle.addTo(map);
+}
+
+function updateCurrentPlayerSprites() {
+    current_player_marker.update();
+    current_player_circle.redraw();
+}
+
+function addLocationEvent(loc){
+    animated_sprites.push({ loc:loc, state:0});
+}
+
+function animateSprites() {
+    for(var i=animated_sprites.length-1;i>=0;i--) {
+        var remove = animateSprite(animated_sprites[i]);
+        if( remove ) {
+            animated_sprites.splice(i,1);
         }
     }
+}
 
-    function getDistanceAsString(m) {
-        if(m >= 1000) {
-            var km = m/1000;
-            return km.toFixed(0)+"km";
-        }
-        else {
-            return m.toFixed(0)+"m";
-        }
+function animateSprite(sprite) {
+    var remove = false;
+    if(sprite.state == 0) {
+        sprite.circle = L.circle(sprite.loc, 5);
+        sprite.circle.addTo(map);
     }
-
-    function getOtherPlayerPopupText(p) {
-        return p.id + " " + getDistanceAsString(p.loc.distanceTo(player.loc));
+    else if(sprite.state >= 20) {
+        map.removeLayer(sprite.circle);
+        remove = true;
     }
-
-    function addCurrentPlayerSprites() {
-        var greenIcon = new L.Icon({
-          iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        });
-        current_player_marker = L.marker(player.loc,{icon: greenIcon});
-        current_player_marker.addTo(map);
-        current_player_marker.bindPopup(player.id+" (you)");
-        current_player_circle = L.circle(player.loc,30);
-        current_player_circle.addTo(map);
+    else {
+        sprite.circle.setRadius(sprite.circle.getRadius()+4);
+        sprite.circle.setStyle({opacity: sprite.circle.options.opacity*0.9, fillOpacity: sprite.circle.options.fillOpacity*0.9});
+        sprite.circle.redraw();
     }
-
-    function updateCurrentPlayerSprites() {
-        current_player_marker.update();
-        current_player_circle.redraw();
-    }
+    sprite.state++;
+    return remove;
+}
 </script>
 
 </body>
