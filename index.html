@@ -58,7 +58,7 @@ setInterval(function() { playerPulse(); }, pulse_interval_ms );
 
 addCurrentPlayerSprites();
 
-processPlayersString('0,klau,52.1855,0.1762\n0,foo,52.1851,0.1767\n'); // DEBUG
+processPlayersString('0,klau,52.1855,0.1762\n0,foo,52.1851,0.1767\n0,bar,52.1859,0.1757\n'); // DEBUG
 
 // ----------------------------------------------------------------------------
 
@@ -196,15 +196,28 @@ function Pulse(loc,start_time_ms) {
 }
 
 function playerPulse(){
+    pulses = [];
     var time_now_ms = new Date().getTime();
     pulses.push(new Pulse( player.loc, time_now_ms ));
-    // trigger a chain reaction of events by proximity
-    for(var i=0;i<players.length;i++) {
-        if(players[i].id !== player.id) {
-            var m = players[i].loc.distanceTo(player.loc);
-            if( m < pulse_distance_m ) {
-                var delay_ms = 1000 * ( m / pulse_speed_m_per_s );
-                pulses.push(new Pulse( players[i].loc, time_now_ms+delay_ms ));                
+    var have_pulsed = [];
+    have_pulsed[player.id] = true;
+    // trigger a chain reaction of pulses by proximity
+    var added_new = true;
+    while(added_new) {
+        added_new = false;
+        for(var iPulse=0;iPulse<pulses.length;iPulse++) {
+            var pulse = pulses[iPulse];
+            // does this pulse trigger any player?
+            for(var i=0;i<players.length;i++) {
+                // does the pulse trigger this player?
+                var candidateID = players[i].id;
+                var m = players[i].loc.distanceTo(pulse.loc);
+                if(!have_pulsed[candidateID] && m < pulse_distance_m ) {
+                    var delay_ms = 1000 * ( m / pulse_speed_m_per_s );
+                    pulses.push(new Pulse( players[i].loc, pulse.start_time_ms+delay_ms ));
+                    have_pulsed[candidateID] = true;
+                    added_new = true;
+                }
             }
         }
     }
