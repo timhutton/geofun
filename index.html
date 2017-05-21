@@ -134,7 +134,7 @@ function onLocationError(e) {
 
 function sendLocation(latlng) {
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://geofun.org.uk:8081/insert", true);
+    xhr.open("POST", "https://api.geofun.org.uk/insert", true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.send("user="+player.id+"&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6));
 }
@@ -156,7 +156,7 @@ function requestPlayersString() {
         }
     }
     var client = new HttpClient();
-    client.get('https://geofun.org.uk:8081/', processPlayersString);
+    client.get('https://api.geofun.org.uk/', processPlayersString);
 }
 
 function processPlayersString(response) {
