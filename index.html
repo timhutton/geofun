@@ -122,21 +122,22 @@ function Pulse(loc,start_time_ms) {
 function onLocationFound(e) {
     player.loc.lat = e.latlng.lat;
     player.loc.lng = e.latlng.lng;
+    player.accuracy = e.accuracy/2;
     updateAllPlayersSprites();
     if(!did_pan_once) { did_pan_once = true; map.panTo(player.loc); }
     setTimeout(requestLocation,location_polling_interval_ms); // (only request again when succeeded)
-    sendLocation(e.latlng);
+    sendLocation(e.latlng, e.accuracy/2);
 }
 
 function onLocationError(e) {
     alert(e.message);
 }
 
-function sendLocation(latlng) {
+function sendLocation(latlng,radius_m) {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "https://geofun.org.uk:8080/insert", true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.send("user="+player.id+"&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6));
+    xhr.send("user="+player.id+"&latitude="+latlng.lat.toFixed(6)+"&longitude="+latlng.lng.toFixed(6)+"&accuracy="+radius_m.toFixed(0));
 }
 
 function requestLocation() {
@@ -232,7 +233,7 @@ function addCurrentPlayerSprites() {
     current_player_marker = L.marker(player.loc,{icon: greenIcon});
     current_player_marker.addTo(map);
     current_player_marker.bindPopup(player.id+" (you)");
-    current_player_circle = L.circle(player.loc,30);
+    current_player_circle = L.circle(player.loc,player.accuracy);
     current_player_circle.addTo(map);
 }
 
