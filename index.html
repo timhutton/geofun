@@ -140,7 +140,7 @@ function sendLocation(latlng) {
 }
 
 function requestLocation() {
-    map.locate();
+    map.locate({ enableHighAccuracy:true });
 }
 
 function requestPlayersString() {
