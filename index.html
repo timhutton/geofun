@@ -112,9 +112,10 @@ var presentButton = L.Control.extend({
 
 map.addControl(new presentButton());
 
-function Player(id, loc) {
+function Player(id, loc, accuracy) {
     this.id = id;
     this.loc = loc;
+    this.accuracy = accuracy;
 }
 
 function Pulse(loc,start_time_ms) {
@@ -174,7 +175,7 @@ function parsePlayersString(response) {
     var lines = response.split('\n');
     for(var i=0;i<lines.length-1;i++) {
         var parts = lines[i].split(',');
-        players[i] = new Player( parts[1], L.latLng(parseFloat(parts[2]),parseFloat(parts[3])) );
+        players[i] = new Player( parts[1], L.latLng(parseFloat(parts[2]),parseFloat(parts[3])), parseFloat[4] );
     }
 }
 
@@ -202,7 +203,7 @@ function addOtherPlayersSprites() {
             marker.addTo(map);
             marker.bindPopup(getOtherPlayerPopupText(players[i]));
             other_players_sprites.push(marker);
-            var circle = L.circle(players[i].loc,20);
+            var circle = L.circle(players[i].loc,players[i].accuracy);
             circle.addTo(map);
             other_players_sprites.push(circle);
         }
