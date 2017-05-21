@@ -156,7 +156,7 @@ function requestPlayersString() {
         }
     }
     var client = new HttpClient();
-    client.get('http://api.geofun.org.uk:8080/', processPlayersString);
+    client.get('http://api.geofun.org.uk:8080/data', processPlayersString);
 }
 
 function processPlayersString(response) {
