@@ -42,7 +42,11 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
     id: 'mapbox.light'
     }).addTo(map);
 
-var player = new Player( Math.random().toString(36).substring(7), defaultLoc );
+if(window.location.search)
+    username = window.location.search.substring(1);
+else
+    username = Math.random().toString(36).substring(7)
+var player = new Player( username, defaultLoc );
 var players = [];
 var other_players_sprites = [];
 var pulses = [];
