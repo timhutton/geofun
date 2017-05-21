@@ -62,7 +62,7 @@ setInterval( animatePulses,        animation_interval_ms );
 
 addCurrentPlayerSprites();
 
-processPlayersString('0,klau,52.1855,0.1762\n0,foo,52.1851,0.1767\n0,bar,52.1859,0.1757\n'); // DEBUG
+processPlayersString('0,klau,52.1855,0.1762,20\n0,foo,52.1851,0.1767,20\n0,bar,52.1859,0.1757,20\n'); // DEBUG
 
 // ----------------------------------------------------------------------------
 
@@ -175,7 +175,7 @@ function parsePlayersString(response) {
     var lines = response.split('\n');
     for(var i=0;i<lines.length-1;i++) {
         var parts = lines[i].split(',');
-        players[i] = new Player( parts[1], L.latLng(parseFloat(parts[2]),parseFloat(parts[3])), parseFloat[4] );
+        players[i] = new Player( parts[1], L.latLng(parseFloat(parts[2]),parseFloat(parts[3])), parseFloat(parts[4]) );
     }
 }
 
