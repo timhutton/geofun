@@ -52,19 +52,47 @@ map.on('locationfound', onLocationFound);
 map.on('locationerror', onLocationError);
 requestLocation();
 requestPlayersString();
-setInterval(requestPlayersString,players_string_polling_interval_ms);
-setInterval(animatePulses,animation_interval_ms);
-setInterval(function() { playerPulse(); }, pulse_interval_ms );
+setInterval( requestPlayersString, players_string_polling_interval_ms );
+setInterval( animatePulses,        animation_interval_ms );
+//setInterval( playerPulse,          pulse_interval_ms );
 
 addCurrentPlayerSprites();
 
 processPlayersString('0,klau,52.1855,0.1762\n0,foo,52.1851,0.1767\n0,bar,52.1859,0.1757\n'); // DEBUG
 
 // ----------------------------------------------------------------------------
+var customControl = L.Control.extend({
+  options: {
+    position: 'topleft'
+  },
+  onAdd: function (map) {
+    var container = L.DomUtil.create('input','my-button btn');
+    container.type="button";
+    container.title="⚡";
+    container.value = "⚡";
+    container.label = "⚡";
+
+    container.style.backgroundColor = 'white';
+    container.style.width = '30px';
+    container.style.height = '30px';
+    container.onclick = function(){
+        playerPulse();
+    }
+    return container;
+  },
+});
+
+map.addControl(new customControl());
 
 function Player(id, loc) {
     this.id = id;
     this.loc = loc;
+}
+
+function Pulse(loc,start_time_ms) {
+    this.loc = loc;
+    this.state = 0;
+    this.start_time_ms = start_time_ms;
 }
 
 function onLocationFound(e) {
@@ -189,14 +217,8 @@ function updateCurrentPlayerSprites() {
     current_player_circle.redraw();
 }
 
-function Pulse(loc,start_time_ms) {
-    this.loc = loc;
-    this.state = 0;
-    this.start_time_ms = start_time_ms;
-}
-
-function playerPulse(){
-    pulses = [];
+function playerPulse() {
+    removePulses();
     var time_now_ms = new Date().getTime();
     pulses.push(new Pulse( player.loc, time_now_ms ));
     var have_pulsed = [];
@@ -259,6 +281,16 @@ function animatePulse(pulse) {
     }
     return remove;
 }
+
+function removePulses() {
+    for(var i=0;i<pulses.length;++i) {
+        if( pulses[i].circle !== undefined ) {
+            map.removeLayer(pulses[i].circle);
+        }
+    }
+    pulses=[];
+}
+
 </script>
 
 </body>
