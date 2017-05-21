@@ -61,7 +61,8 @@ addCurrentPlayerSprites();
 processPlayersString('0,klau,52.1855,0.1762\n0,foo,52.1851,0.1767\n0,bar,52.1859,0.1757\n'); // DEBUG
 
 // ----------------------------------------------------------------------------
-var customControl = L.Control.extend({
+
+var sparkButton = L.Control.extend({
   options: {
     position: 'topleft'
   },
@@ -82,7 +83,30 @@ var customControl = L.Control.extend({
   },
 });
 
-map.addControl(new customControl());
+map.addControl(new sparkButton());
+
+var presentButton = L.Control.extend({
+  options: {
+    position: 'topleft'
+  },
+  onAdd: function (map) {
+    var container = L.DomUtil.create('input','my-button btn');
+    container.type="button";
+    container.title="🎁";
+    container.value = "🎁";
+    container.label = "🎁";
+
+    container.style.backgroundColor = 'white';
+    container.style.width = '30px';
+    container.style.height = '30px';
+    container.onclick = function(){
+        playerPulse();
+    }
+    return container;
+  },
+});
+
+map.addControl(new presentButton());
 
 function Player(id, loc) {
     this.id = id;
