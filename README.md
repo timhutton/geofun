@@ -1,2 +1,2 @@
 # geofun
-Exploring location-based fun - visit [http://api.geofun.org.uk:8080](http://api.geofun.org.uk:8080)
+Exploring location-based fun - visit [https://geofun.org.uk:8080](https://geofun.org.uk:8080)
