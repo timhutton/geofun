@@ -15,6 +15,9 @@
             width: 600px;
             height: 400px;
         }
+        .boxClass {
+            font-size:150%
+        }
     </style>
 
     <style>body { padding: 0; margin: 0; } html, body, #map { height: 100vh; width: 100vw; }</style>
@@ -68,7 +71,6 @@ processPlayersString('0,klau,user,52.1855,0.1762,20,,,,,\n0,foo,user,52.1851,0.1
 var console_debug = false;
 
 //addButton("\u26A1", "spark", playerPulse);
-//addButton("\uD83C\uDF81", "gift", playerPulse);
 addButton("\uD83D\uDC41","zoom to show all users",function(){
         users = [];
         for(var i =0;i<players.length;++i) {
@@ -81,7 +83,31 @@ addButton("\u272A", "go to my location", function(){
             map.setView(player.loc,16);
             always_pan_to_user = true;
         });
+addButton("\uD83C\uDF81", "gift", placeBox);
 addButton("?","help",function(){window.location.href = 'https://github.com/timhutton/geofun';});
+
+var createLabelIcon = function(labelClass,labelText){
+  return L.divIcon({ 
+    className: labelClass,
+    html: labelText
+  })
+}
+
+// ----------------------- classes ------------------------------------
+
+function Player(id, loc, accuracy_m) {
+    this.id = id;
+    this.loc = loc;
+    this.accuracy_m = accuracy_m;
+}
+
+function Pulse(loc,start_time_ms) {
+    this.loc = loc;
+    this.state = 0;
+    this.start_time_ms = start_time_ms;
+}
+
+// ------------------------ functions ---------------------------------
 
 function addButton(label,desc,func) {
 
@@ -112,18 +138,6 @@ function addButton(label,desc,func) {
     map.addControl(new button());
 }
 
-function Player(id, loc, accuracy_m) {
-    this.id = id;
-    this.loc = loc;
-    this.accuracy_m = accuracy_m;
-}
-
-function Pulse(loc,start_time_ms) {
-    this.loc = loc;
-    this.state = 0;
-    this.start_time_ms = start_time_ms;
-}
-
 function onLocationFound(e) {
     player.loc.lat = e.latlng.lat;
     player.loc.lng = e.latlng.lng;
@@ -144,15 +158,30 @@ function onLocationError(e) {
     console.log(e.message);
 }
 
-function sendPlayerLocation() {
+function sendInsertString(s) {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "https://geofun.org.uk/insert", true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    var post_string = "oid="+player.id+"&type=user&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6)+"&accuracy="+player.accuracy_m.toFixed(0);
-    xhr.send(post_string);
-    // TODO: slot1=blah&slot2=blah..slot5=blah
+    xhr.send(s);
     if(console_debug)
-        console.log('Sent:',post_string);
+        console.log('Sent:',s);
+}
+
+function sendPlayerLocation() {
+    var post_string = "oid="+player.id+"&type=user&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6)+"&accuracy="+player.accuracy_m.toFixed(0);
+    sendInsertString(post_string);
+    // TODO: slot1=blah&slot2=blah..slot5=blah
+}
+
+function placeBox() {
+    // make a guid-like string
+    var box_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+    var post_string = "oid="+box_id+"&type=box&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6)+"&accuracy="+player.accuracy_m.toFixed(0);
+    sendInsertString(post_string);
+    // TODO: slot1=blah&slot2=blah..slot5=blah
 }
 
 function requestLocation() {
@@ -194,7 +223,10 @@ function parsePlayersString(response) {
         var lng = parseFloat(parts[4]);
         var accuracy = parseFloat(parts[5]);
         if(type=="user") {
-            players[i] = new Player( username, L.latLng(lat,lng), accuracy );
+            players.push( new Player( username, new L.latLng(lat,lng), accuracy ));
+        }
+        else if(type=="box") {
+            L.marker(new L.latLng(lat,lng), {icon: createLabelIcon("boxClass","\uD83C\uDF81") }).addTo(map);
         }
     }
 }
