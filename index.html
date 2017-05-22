@@ -24,7 +24,7 @@
 <div id='map'></div>
 
 <script>
-var location_polling_interval_ms = 5000;
+var location_sending_interval_ms = 5000;
 var players_string_polling_interval_ms = 5000;
 var pulse_interval_ms = 3000;
 var animation_interval_ms = 30;
@@ -58,14 +58,18 @@ requestLocation();
 requestPlayersString();
 setInterval( requestPlayersString, players_string_polling_interval_ms );
 setInterval( animatePulses,        animation_interval_ms );
-//setInterval( playerPulse,          pulse_interval_ms );
+setInterval( playerPulse,          pulse_interval_ms );
+setInterval( sendPlayerLocation,   location_sending_interval_ms );
 
 addCurrentPlayerSprites();
 
 processPlayersString('0,klau,user,52.1855,0.1762,20,,,,,\n0,foo,user,52.1851,0.1767,20,,,,,\n0,bar,user,52.1859,0.1757,20,,,,,\n'); // DEBUG
 
+var console_debug = false;
+
 // ----------------------------------------------------------------------------
 
+/*
 var sparkButton = L.Control.extend({
   options: {
     position: 'topleft'
@@ -111,11 +115,12 @@ var presentButton = L.Control.extend({
 });
 
 map.addControl(new presentButton());
+*/
 
-function Player(id, loc, accuracy) {
+function Player(id, loc, accuracy_m) {
     this.id = id;
     this.loc = loc;
-    this.accuracy = accuracy;
+    this.accuracy_m = accuracy_m;
 }
 
 function Pulse(loc,start_time_ms) {
@@ -127,27 +132,30 @@ function Pulse(loc,start_time_ms) {
 function onLocationFound(e) {
     player.loc.lat = e.latlng.lat;
     player.loc.lng = e.latlng.lng;
-    player.accuracy = e.accuracy/2;
+    player.accuracy_m = e.accuracy/2;
     updateAllPlayersSprites();
     if(!did_pan_once) { did_pan_once = true; map.panTo(player.loc); }
-    setTimeout(requestLocation,location_polling_interval_ms); // (only request again when succeeded)
-    sendLocation(e.latlng, e.accuracy/2);
+    if(console_debug)
+        console.log('Got location:',e.latlng.lat,e.latlng.lng,e.accuracy/2);
 }
 
 function onLocationError(e) {
     alert(e.message);
 }
 
-function sendLocation(latlng,radius_m) {
+function sendPlayerLocation() {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "https://geofun.org.uk/insert", true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.send("oid="+player.id+"&type=user&latitude="+latlng.lat.toFixed(6)+"&longitude="+latlng.lng.toFixed(6)+"&accuracy="+radius_m.toFixed(0));
+    var post_string = "oid="+player.id+"&type=user&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6)+"&accuracy="+player.accuracy_m.toFixed(0);
+    xhr.send(post_string);
     // TODO: slot1=blah&slot2=blah..slot5=blah
+    if(console_debug)
+        console.log('Sent:',post_string);
 }
 
 function requestLocation() {
-    map.locate({ enableHighAccuracy:true });
+    map.locate({ enableHighAccuracy:true, watch:true });
 }
 
 function requestPlayersString() {
@@ -167,6 +175,8 @@ function requestPlayersString() {
 }
 
 function processPlayersString(response) {
+    if(console_debug)
+        console.log('Received:',response);
     parsePlayersString(response);
     updateOtherPlayersSprites();
 }
@@ -189,8 +199,8 @@ function parsePlayersString(response) {
 }
 
 function updateAllPlayersSprites() {
-    updateCurrentPlayerSprites();
     updateOtherPlayersSprites();
+    updateCurrentPlayerSprites();
 }
 
 function updateOtherPlayersSprites() {
