@@ -15,6 +15,9 @@
             width: 600px;
             height: 400px;
         }
+        .leaflet-control-button {
+            font-size: 150%;
+        }
     </style>
 
     <style>body { padding: 0; margin: 0; } html, body, #map { height: 100vh; width: 100vw; }</style>
@@ -91,13 +94,12 @@ function addButton(label,desc,func) {
         container.style.backgroundColor = 'white';
         container.style.width = '30px';
         container.style.height = '30px';
-        container.style.fontsize = '56px';
         container.onclick = func;
         container.onmouseover = function(){
-          container.style.backgroundColor = 'WhiteSmoke'; 
+          container.style.backgroundColor = 'WhiteSmoke';
         }
         container.onmouseout = function(){
-          container.style.backgroundColor = 'white'; 
+          container.style.backgroundColor = 'white';
         }
         return container;
       },
