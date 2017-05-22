@@ -68,78 +68,42 @@ processPlayersString('0,klau,user,52.1855,0.1762,20,,,,,\n0,foo,user,52.1851,0.1
 
 var console_debug = false;
 
-// ----------------------------------------------------------------------------
+addButton("\u25CE", "go to my location", function(){
+            map.setView(player.loc,16);
+            always_pan_to_user = true;
+        });
+//addButton("\u26A1", "spark", playerPulse);
+//addButton("\uD83C\uDF81", "gift", playerPulse);
 
-/*
-var sparkButton = L.Control.extend({
-  options: {
-    position: 'topleft'
-  },
-  onAdd: function (map) {
-    var container = L.DomUtil.create('input','my-button btn');
-    container.type="button";
-    container.title="\u26A1";
-    container.value = "\u26A1";
-    container.label = "\u26A1";
+function addButton(label,desc,func) {
 
-    container.style.backgroundColor = 'white';
-    container.style.width = '30px';
-    container.style.height = '30px';
-    container.onclick = function(){
-        playerPulse();
-    }
-    return container;
-  },
-});
+    var button = L.Control.extend({
+      options: {
+        position: 'topleft'
+      },
+      onAdd: function (map) {
+        var container = L.DomUtil.create('input','leaflet-control-button');
+        container.type  = "button";
+        container.title = desc;
+        container.value = label;
+        container.label = label;
 
-map.addControl(new sparkButton());
-
-var presentButton = L.Control.extend({
-  options: {
-    position: 'topleft'
-  },
-  onAdd: function (map) {
-    var container = L.DomUtil.create('input','my-button btn');
-    container.type="button";
-    container.title="\uD83C\uDF81";
-    container.value = "\uD83C\uDF81";
-    container.label = "\uD83C\uDF81";
-
-    container.style.backgroundColor = 'white';
-    container.style.width = '30px';
-    container.style.height = '30px';
-    container.onclick = function(){
-        playerPulse();
-    }
-    return container;
-  },
-});
-
-map.addControl(new presentButton());
-*/
-
-var findMeButton = L.Control.extend({
-  options: {
-    position: 'topleft'
-  },
-  onAdd: function (map) {
-    var container = L.DomUtil.create('input','my-button btn');
-    container.type  = "button";
-    container.title = "go to my location";
-    container.value = "\u25CE";
-    container.label = "\u25CE";
-
-    container.style.backgroundColor = 'white';
-    container.style.width = '30px';
-    container.style.height = '30px';
-    container.onclick = function(){
-        map.setView(player.loc,16);
-        always_pan_to_user = true;
-    }
-    return container;
-  },
-});
-map.addControl(new findMeButton());
+        container.style.backgroundColor = 'white';
+        container.style.width = '30px';
+        container.style.height = '30px';
+        container.style.fontsize = '56px';
+        container.onclick = func;
+        container.onmouseover = function(){
+          container.style.backgroundColor = 'WhiteSmoke'; 
+        }
+        container.onmouseout = function(){
+          container.style.backgroundColor = 'white'; 
+        }
+        return container;
+      },
+    });
+    map.addControl(new button());
+}
 
 function Player(id, loc, accuracy_m) {
     this.id = id;
