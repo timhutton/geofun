@@ -67,22 +67,21 @@ processPlayersString('0,klau,user,52.1855,0.1762,20,,,,,\n0,foo,user,52.1851,0.1
 
 var console_debug = false;
 
-addButton("\u25CE", "go to my location", function(){
-            map.setView(player.loc,16);
-            always_pan_to_user = true;
-        });
 //addButton("\u26A1", "spark", playerPulse);
 //addButton("\uD83C\uDF81", "gift", playerPulse);
-addButton("?","help",function(){window.location.href = 'https://github.com/timhutton/geofun';});
 addButton("\uD83D\uDC41","zoom to show all users",function(){
         users = [];
         for(var i =0;i<players.length;++i) {
             users.push([players[i].loc.lat,players[i].loc.lng]);
         }
-        console.log(users);
         map.fitBounds( users );
         always_pan_to_user = false;
     } );
+addButton("\u272A", "go to my location", function(){
+            map.setView(player.loc,16);
+            always_pan_to_user = true;
+        });
+addButton("?","help",function(){window.location.href = 'https://github.com/timhutton/geofun';});
 
 function addButton(label,desc,func) {
 
