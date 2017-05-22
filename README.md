@@ -7,3 +7,5 @@ Things to try:
 - Click on a marker to see who it is.
 - Get a custom username by appending ```?user``` to the url, e.g. https://geofun.org.uk?fred
 - Arrange to meet up with your friends by seeing where they are and walking towards them.
+
+If you're interested in playtesting with us, consider joining [https://groups.google.com/forum/#!forum/geofun-announce](geofun-announce), a low-volume annoucement list intended to inform its subscribers about upcoming games.
