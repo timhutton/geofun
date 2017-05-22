@@ -62,7 +62,7 @@ setInterval( animatePulses,        animation_interval_ms );
 
 addCurrentPlayerSprites();
 
-processPlayersString('0,klau,52.1855,0.1762,20\n0,foo,52.1851,0.1767,20\n0,bar,52.1859,0.1757,20\n'); // DEBUG
+processPlayersString('0,klau,user,52.1855,0.1762,20,,,,,\n0,foo,user,52.1851,0.1767,20,,,,,\n0,bar,user,52.1859,0.1757,20,,,,,\n'); // DEBUG
 
 // ----------------------------------------------------------------------------
 
@@ -142,7 +142,8 @@ function sendLocation(latlng,radius_m) {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "https://geofun.org.uk/insert", true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.send("user="+player.id+"&latitude="+latlng.lat.toFixed(6)+"&longitude="+latlng.lng.toFixed(6)+"&accuracy="+radius_m.toFixed(0));
+    xhr.send("oid="+player.id+"&type=user&latitude="+latlng.lat.toFixed(6)+"&longitude="+latlng.lng.toFixed(6)+"&accuracy="+radius_m.toFixed(0));
+    // TODO: slot1=blah&slot2=blah..slot5=blah
 }
 
 function requestLocation() {
@@ -175,7 +176,15 @@ function parsePlayersString(response) {
     var lines = response.split('\n');
     for(var i=0;i<lines.length-1;i++) {
         var parts = lines[i].split(',');
-        players[i] = new Player( parts[1], L.latLng(parseFloat(parts[2]),parseFloat(parts[3])), parseFloat(parts[4]) );
+        var ago = parseFloat(parts[0]);
+        var username = parts[1];
+        var type = parts[2];
+        var lat = parseFloat(parts[3]);
+        var lng = parseFloat(parts[4]);
+        var accuracy = parseFloat(parts[5]);
+        if(type=="user") {
+            players[i] = new Player( username, L.latLng(lat,lng), accuracy );
+        }
     }
 }
 
