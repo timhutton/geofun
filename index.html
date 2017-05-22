@@ -15,9 +15,6 @@
             width: 600px;
             height: 400px;
         }
-        .leaflet-control-button {
-            font-size: 150%;
-        }
     </style>
 
     <style>body { padding: 0; margin: 0; } html, body, #map { height: 100vh; width: 100vw; }</style>
@@ -77,6 +74,15 @@ addButton("\u25CE", "go to my location", function(){
 //addButton("\u26A1", "spark", playerPulse);
 //addButton("\uD83C\uDF81", "gift", playerPulse);
 addButton("?","help",function(){window.location.href = 'https://github.com/timhutton/geofun';});
+addButton("\uD83D\uDC41","zoom to show all users",function(){
+        users = [];
+        for(var i =0;i<players.length;++i) {
+            users.push([players[i].loc.lat,players[i].loc.lng]);
+        }
+        console.log(users);
+        map.fitBounds( users );
+        always_pan_to_user = false;
+    } );
 
 function addButton(label,desc,func) {
 
