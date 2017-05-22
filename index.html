@@ -50,10 +50,11 @@ var player = new Player( username, defaultLoc );
 var players = [];
 var other_players_sprites = [];
 var pulses = [];
-var did_pan_once = false;
+var always_pan_to_user = true;
 
 map.on('locationfound', onLocationFound);
 map.on('locationerror', onLocationError);
+map.on('dragend', function(){ always_pan_to_user=false; } );
 requestLocation();
 requestPlayersString();
 setInterval( requestPlayersString, players_string_polling_interval_ms );
@@ -117,6 +118,29 @@ var presentButton = L.Control.extend({
 map.addControl(new presentButton());
 */
 
+var findMeButton = L.Control.extend({
+  options: {
+    position: 'topleft'
+  },
+  onAdd: function (map) {
+    var container = L.DomUtil.create('input','my-button btn');
+    container.type  = "button";
+    container.title = "go to my location";
+    container.value = "\u25CE";
+    container.label = "\u25CE";
+
+    container.style.backgroundColor = 'white';
+    container.style.width = '30px';
+    container.style.height = '30px';
+    container.onclick = function(){
+        map.setView(player.loc,16);
+        always_pan_to_user = true;
+    }
+    return container;
+  },
+});
+map.addControl(new findMeButton());
+
 function Player(id, loc, accuracy_m) {
     this.id = id;
     this.loc = loc;
@@ -134,7 +158,9 @@ function onLocationFound(e) {
     player.loc.lng = e.latlng.lng;
     player.accuracy_m = e.accuracy/2;
     updateAllPlayersSprites();
-    if(!did_pan_once) { did_pan_once = true; map.panTo(player.loc); }
+    if(always_pan_to_user) {
+        map.panTo(player.loc);
+    }
     if(console_debug)
         console.log('Got location:',e.latlng.lat,e.latlng.lng,e.accuracy/2);
 }
