@@ -8,4 +8,4 @@ Things to try:
 - Get a custom username by appending ```?user``` to the url, e.g. https://geofun.org.uk?fred
 - Arrange to meet up with your friends by seeing where they are and walking towards them.
 
-If you're interested in playtesting with us, consider joining [geofun-announce](https://groups.google.com/forum/#!forum/geofun-announce), a low-volume annoucement list intended to inform its subscribers about upcoming games.
+If you're interested in playtesting with us, consider joining [geofun-announce](https://groups.google.com/forum/#!forum/geofun-announce), a low-volume annoucement list intended to inform its subscribers about upcoming games. You can most easily join the list by sending an email message to geofun-announce+subscribe@googlegroups.com.
