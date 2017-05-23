@@ -71,27 +71,10 @@ processPlayersString('0,klau,user,52.1855,0.1762,20,,,,,\n0,foo,user,52.1851,0.1
 var console_debug = false;
 
 //addButton("\u26A1", "spark", playerPulse);
-addButton("\uD83D\uDC41","zoom to show all users",function(){
-        users = [];
-        for(var i =0;i<players.length;++i) {
-            users.push([players[i].loc.lat,players[i].loc.lng]);
-        }
-        map.fitBounds( users );
-        always_pan_to_user = false;
-    } );
-addButton("\u272A", "go to my location", function(){
-            map.setView(player.loc,16);
-            always_pan_to_user = true;
-        });
+addButton("\uD83D\uDC41", "zoom to show all users", zoomToShowAll);
+addButton("\u272A", "go to my location", panToMyLocation);
 addButton("\uD83C\uDF81", "gift", placeBox);
-addButton("?","help",function(){window.location.href = 'https://github.com/timhutton/geofun';});
-
-var createLabelIcon = function(labelClass,labelText){
-  return L.divIcon({ 
-    className: labelClass,
-    html: labelText
-  })
-}
+addButton("?", "help", function() { window.location.href = 'https://github.com/timhutton/geofun'; } );
 
 // ----------------------- classes ------------------------------------
 
@@ -109,8 +92,25 @@ function Pulse(loc,start_time_ms) {
 
 // ------------------------ functions ---------------------------------
 
-function addButton(label,desc,func) {
+function createLabelIcon(labelClass,labelText) {
+  return L.divIcon({ className: labelClass, html: labelText });
+}
 
+function panToMyLocation() {
+    map.setView(player.loc,16);
+    always_pan_to_user = true;
+}
+
+function zoomToShowAll() {
+    users = [];
+    for(var i =0;i<players.length;++i) {
+        users.push([players[i].loc.lat,players[i].loc.lng]);
+    }
+    map.fitBounds( users );
+    always_pan_to_user = false;
+}
+
+function addButton(label,desc,func) {
     var button = L.Control.extend({
       options: {
         position: 'topleft'
