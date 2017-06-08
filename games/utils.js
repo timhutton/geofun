@@ -1,3 +1,12 @@
+function postString(url,s) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.send(s);
+    if(console_debug)
+        console.log('Sent:',s);
+}
+
 function addButton(label,desc,func,map) {
     var button = L.Control.extend({
       options: {
