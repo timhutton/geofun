@@ -39,11 +39,11 @@ setInterval( sendPlayerLocation,   location_sending_interval_ms );
 
 var console_debug = false;
 
-//addButton("\u26A1", "spark", playerPulse);
-addButton("\uD83D\uDC41", "zoom to show all users", zoomToShowAll);
-addButton("\u272A", "go to my location", panToMyLocation);
-addButton("\uD83C\uDF81", "gift", placeBox);
-addButton("?", "help", function() { window.location.href = 'https://github.com/timhutton/geofun'; } );
+//addButton("\u26A1", "spark", playerPulse,map);
+addButton("\uD83D\uDC41", "zoom to show all users", zoomToShowAll,map);
+addButton("\u272A", "go to my location", panToMyLocation,map);
+addButton("\uD83C\uDF81", "gift", placeBox,map);
+addButton("?", "help", function() { window.location.href = 'https://github.com/timhutton/geofun'; },map );
 
 // ----------------------- classes ------------------------------------
 
