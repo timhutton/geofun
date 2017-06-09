@@ -21,6 +21,7 @@ var player = new Player( defaultLoc );
 var got_current_player_location = false;
 var pulses = [];
 var always_pan_to_user = true;
+var tiles = [];
 
 map.on('locationfound', onLocationFound);
 map.on('locationerror', onLocationError);
@@ -38,7 +39,7 @@ addButton("\u272A", "go to my location", panToMyLocation, map);
 addButton("\u270F", "paint tile", paintTile, map);
 addButton("?", "help", function() { window.location.href = 'https://github.com/timhutton/geofun'; }, map );
 
-processTilesString("52.000899,0.001462,D2F135");
+processTilesString("52.000899,0.001462,D2F135"); // DEBUG
 
 // ----------------------- classes ------------------------------------
 
@@ -51,6 +52,11 @@ function Pulse(loc,start_time_ms) {
     this.loc = loc;
     this.state = 0;
     this.start_time_ms = start_time_ms;
+}
+
+function Tile(loc,color) {
+    this.loc = loc;
+    this.color = color;
 }
 
 // ------------------------ functions ---------------------------------
@@ -123,23 +129,30 @@ function processTilesString(response) {
     if(console_debug)
         console.log('Received:',response);
     parseTilesString(response);
-    updateTiles();
 }
 
 function parseTilesString(response) {
-    tiles = [];
+    removeAllTiles();
     var lines = response.split('\n');
-    for(var i=0;i<lines.length-1;i++) {
+    for(var i=0;i<lines.length;i++) {
         var parts = lines[i].split(',');
         var lat = parseFloat(parts[0]);
         var lng = parseFloat(parts[1]);
         var color = parts[2];
-        // TODO: add tile to map
+        addTileToMap(L.latLng(lat,lng),color);
     }
 }
 
-function updateTiles() {
-    // TODO
+function removeAllTiles() {
+    for(var i = 0; i < tiles.length; ++i) {
+        // TODO
+    }
+    tiles = [];
+}
+
+function addTileToMap(loc,color) {
+    var bounds = [[loc.lat-1.0/latitude_divisor, loc.lng-1.0/longitude_divisor], [loc.lat+1.0/latitude_divisor,loc.lng+1.0/longitude_divisor]];
+    L.rectangle(bounds, {color: "#"+color, weight: 1, fillOpacity: 0.8}).addTo(map);
 }
 
 function updatePlayerSprites() {
