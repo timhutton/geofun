@@ -32,14 +32,12 @@ setInterval( requestTiles,  tile_polling_interval_ms );
 setInterval( animatePulses, animation_interval_ms );
 setInterval( playerPulse,   pulse_interval_ms );
 
-var console_debug = true;
+var console_debug = false;
 
-addButton("\uD83D\uDC41", "zoom to show all tiles", zoomToShowAll, map);
+//addButton("\uD83D\uDC41", "zoom to show all tiles", zoomToShowAll, map);
 addButton("\u272A", "go to my location", panToMyLocation, map);
 addButton("\u270F", "paint tile", paintTile, map);
 addButton("?", "help", function() { window.location.href = 'https://github.com/timhutton/geofun'; }, map );
-
-processTilesString("52.000899,0.001462,D2F135"); // DEBUG
 
 // ----------------------- classes ------------------------------------
 
@@ -117,17 +115,13 @@ function requestTiles() {
         }
     }
     var client = new HttpClient();
-    // TODO: add bounding box
-    client.get('https://geofun.org.uk/paint/get/centres', processTilesString);
+    // TODO: use a more sensible bounding box - e.g current map view but cache old tiles?
+    client.get('https://geofun.org.uk/paint/get/centres?latitude_min=51&latitude_max=53&longitude_min=-1&longitude_max=1', processTilesString);
 }
 
 function processTilesString(response) {
     if(console_debug)
         console.log('Received:',response);
-    parseTilesString(response);
-}
-
-function parseTilesString(response) {
     removeAllTiles();
     var lines = response.split('\n');
     for(var i=0;i<lines.length;i++) {
