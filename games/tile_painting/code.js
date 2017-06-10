@@ -36,7 +36,11 @@ var console_debug = true;
 
 //addButton("\uD83D\uDC41", "zoom to show all tiles", zoomToShowAll, map);
 addButton("\u272A", "go to my location", panToMyLocation, map);
-addButton("\u270F", "paint tile", paintTile, map);
+addColorPaintButton("F1433F", paintTile, map);
+addColorPaintButton("F7E967", paintTile, map);
+addColorPaintButton("A9CF54", paintTile, map);
+addColorPaintButton("70B7BA", paintTile, map);
+addColorPaintButton("3D4C53", paintTile, map);
 addButton("?", "help", function() { window.location.href = 'https://github.com/timhutton/geofun'; }, map );
 
 // ----------------------- classes ------------------------------------
@@ -54,6 +58,28 @@ function Pulse(loc,start_time_ms) {
 
 // ------------------------ functions ---------------------------------
 
+function addColorPaintButton(color,func,map) {
+    var button = L.Control.extend({
+      options: {
+        position: 'topleft'
+      },
+      onAdd: function (map) {
+        var container = L.DomUtil.create('input','leaflet-control-button');
+        container.type  = "button";
+        container.title = "paint the tile with this color";
+        container.value = "";
+        container.label = "";
+
+        container.style.backgroundColor = "#"+color;
+        container.style.width = '30px';
+        container.style.height = '30px';
+        container.onclick = function() { func(color); };
+        return container;
+      },
+    });
+    map.addControl(new button());
+}
+
 function roundToDivisor(x,divisor) {
     return (Math.floor(x * divisor) + 0.5) / divisor;
 }
@@ -70,9 +96,8 @@ function getTileBounds(loc) {
             [center.lat+0.5/latitude_divisor, center.lng+0.5/longitude_divisor]];
 }
 
-function paintTile() {
+function paintTile(color) {
     var loc = getTileCenter(player.loc);
-    var color = "FF0000"; // TODO: ask user
     var tile_spec = "latitude="+loc.lat.toFixed(5)+"&longitude="+loc.lng.toFixed(5)+"&accuracy=10&color="+color;
     if(console_debug) {
         console.log("Ready to send tile string:",tile_spec);
