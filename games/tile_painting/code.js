@@ -63,7 +63,7 @@ function paintTile() {
     var lat = roundToInt(player.loc.lat,latitude_divisor);
     var lng = roundToInt(player.loc.lng,longitude_divisor);
     var color = "FF0000"; // TODO: ask user
-    var tile_spec = lat.toFixed(6)+","+lng.toFixed(6)+",0,"+color;
+    var tile_spec = lat.toFixed(5)+","+lng.toFixed(5)+","+color;
     if(console_debug) {
         console.log("Ready to send tile string:",tile_spec);
     }
@@ -125,7 +125,7 @@ function processTilesString(response) {
         console.log('Received:',response);
     removeAllTiles();
     var lines = response.split('\n');
-    for(var i=0;i<lines.length;i++) {
+    for(var i=0;i<lines.length-1;i++) {
         var parts = lines[i].split(',');
         var lat = parseFloat(parts[0]);
         var lng = parseFloat(parts[1]);
