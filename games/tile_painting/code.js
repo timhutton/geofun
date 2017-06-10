@@ -93,16 +93,15 @@ function onLocationFound(e) {
     player.loc.lat = e.latlng.lat;
     player.loc.lng = e.latlng.lng;
     player.accuracy_m = e.accuracy/2;
-    current_tile_bounds = getTileBounds(player.loc);
     if(!got_current_player_location) {
         got_current_player_location = true;
         addCurrentPlayerSprites();
-        current_tile_outline = L.rectangle(current_tile_bounds, {color: "#000000", weight: 1, fill: false});
-        current_tile_outline.addTo(map);
     }
-    else {
-        current_tile_outline.redraw();
+    if(typeof current_tile_outline !== 'undefined') {
+        map.removeLayer(current_tile_outline);
     }
+    current_tile_outline = L.rectangle(getTileBounds(player.loc), {color: "#000000", weight: 1, fill: false});
+    current_tile_outline.addTo(map);
     updatePlayerSprites();
     if(always_pan_to_user) {
         map.panTo(player.loc);
