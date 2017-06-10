@@ -55,15 +55,15 @@ function Pulse(loc,start_time_ms) {
 
 // ------------------------ functions ---------------------------------
 
-function roundToInt(x,divisor) {
+function roundToTileCenter(x,divisor) {
     return (Math.floor(x * divisor) + 0.5) / divisor;
 }
 
 function paintTile() {
-    var lat = roundToInt(player.loc.lat,latitude_divisor);
-    var lng = roundToInt(player.loc.lng,longitude_divisor);
+    var lat = roundToTileCenter(player.loc.lat,latitude_divisor);
+    var lng = roundToTileCenter(player.loc.lng,longitude_divisor);
     var color = "FF0000"; // TODO: ask user
-    var tile_spec = lat.toFixed(5)+","+lng.toFixed(5)+","+color;
+    var tile_spec = "latitude="+lat.toFixed(5)+"&longitude="+lng.toFixed(5)+"&accuracy=10&color="+color;
     if(console_debug) {
         console.log("Ready to send tile string:",tile_spec);
     }
