@@ -22,7 +22,6 @@ var got_current_player_location = false;
 var pulses = [];
 var always_pan_to_user = true;
 var tiles = [];
-var current_tile = {};
 
 map.on('locationfound', onLocationFound);
 map.on('locationerror', onLocationError);
@@ -55,15 +54,26 @@ function Pulse(loc,start_time_ms) {
 
 // ------------------------ functions ---------------------------------
 
-function roundToTileCenter(x,divisor) {
+function roundToDivisor(x,divisor) {
     return (Math.floor(x * divisor) + 0.5) / divisor;
 }
 
+function getTileCenter(loc) {
+    var lat = roundToDivisor(loc.lat,latitude_divisor);
+    var lng = roundToDivisor(loc.lng,longitude_divisor);
+    return L.latLng(lat,lng);
+}
+
+function getTileBounds(loc) {
+    var center = getTileCenter(loc);
+    return [[center.lat-0.5/latitude_divisor, center.lng-0.5/longitude_divisor],
+            [center.lat+0.5/latitude_divisor, center.lng+0.5/longitude_divisor]];
+}
+
 function paintTile() {
-    var lat = roundToTileCenter(player.loc.lat,latitude_divisor);
-    var lng = roundToTileCenter(player.loc.lng,longitude_divisor);
+    var loc = getTileCenter(player.loc);
     var color = "FF0000"; // TODO: ask user
-    var tile_spec = "latitude="+lat.toFixed(5)+"&longitude="+lng.toFixed(5)+"&accuracy=10&color="+color;
+    var tile_spec = "latitude="+loc.lat.toFixed(5)+"&longitude="+loc.lng.toFixed(5)+"&accuracy=10&color="+color;
     if(console_debug) {
         console.log("Ready to send tile string:",tile_spec);
     }
@@ -83,9 +93,15 @@ function onLocationFound(e) {
     player.loc.lat = e.latlng.lat;
     player.loc.lng = e.latlng.lng;
     player.accuracy_m = e.accuracy/2;
+    current_tile_bounds = getTileBounds(player.loc);
     if(!got_current_player_location) {
         got_current_player_location = true;
         addCurrentPlayerSprites();
+        current_tile_outline = L.rectangle(current_tile_bounds, {color: "#000000", weight: 1, fill: false});
+        current_tile_outline.addTo(map);
+    }
+    else {
+        current_tile_outline.redraw();
     }
     updatePlayerSprites();
     if(always_pan_to_user) {
@@ -142,7 +158,7 @@ function removeAllTiles() {
 }
 
 function addTileToMap(loc,color) {
-    var bounds = [[loc.lat-1.0/latitude_divisor, loc.lng-1.0/longitude_divisor], [loc.lat+1.0/latitude_divisor,loc.lng+1.0/longitude_divisor]];
+    var bounds = getTileBounds(loc);
     var tile = L.rectangle(bounds, {color: "#"+color, weight: 1, fillOpacity: 0.8});
     tile.addTo(map);
     tiles.push(tile);
@@ -157,7 +173,7 @@ function updatePlayerSprites() {
 function addCurrentPlayerSprites() {
     current_player_marker = L.marker(player.loc);
     current_player_marker.addTo(map);
-    current_player_marker.bindPopup(player.id+" (you)");
+    current_player_marker.bindPopup("you are here");
     current_player_circle = L.circle(player.loc,player.accuracy);
     current_player_circle.setStyle({opacity: 0.6, fillOpacity: 0.3, color: '#009911' });
     current_player_circle.addTo(map);
