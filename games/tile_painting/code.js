@@ -54,11 +54,6 @@ function Pulse(loc,start_time_ms) {
     this.start_time_ms = start_time_ms;
 }
 
-function Tile(loc,color) {
-    this.loc = loc;
-    this.color = color;
-}
-
 // ------------------------ functions ---------------------------------
 
 function roundToInt(x,divisor) {
@@ -122,6 +117,7 @@ function requestTiles() {
         }
     }
     var client = new HttpClient();
+    // TODO: add bounding box
     client.get('https://geofun.org.uk/paint/get/centres', processTilesString);
 }
 
@@ -145,14 +141,16 @@ function parseTilesString(response) {
 
 function removeAllTiles() {
     for(var i = 0; i < tiles.length; ++i) {
-        // TODO
+        map.removeLayer(tiles[i]);
     }
     tiles = [];
 }
 
 function addTileToMap(loc,color) {
     var bounds = [[loc.lat-1.0/latitude_divisor, loc.lng-1.0/longitude_divisor], [loc.lat+1.0/latitude_divisor,loc.lng+1.0/longitude_divisor]];
-    L.rectangle(bounds, {color: "#"+color, weight: 1, fillOpacity: 0.8}).addTo(map);
+    var tile = L.rectangle(bounds, {color: "#"+color, weight: 1, fillOpacity: 0.8});
+    tile.addTo(map);
+    tiles.push(tile);
 }
 
 function updatePlayerSprites() {
