@@ -157,7 +157,7 @@ function requestTiles() {
     }
     var client = new HttpClient();
     // TODO: use a more sensible bounding box - e.g current map view but cache old tiles?
-    client.get('https://geofun.org.uk/paint/get/centres?latitude_min=51&latitude_max=53&longitude_min=-1&longitude_max=1', processTilesString);
+    client.get('https://geofun.org.uk/paint/get/centres?latitude_min=41&latitude_max=63&longitude_min=-10&longitude_max=10', processTilesString);
 }
 
 function processTilesString(response) {
@@ -183,7 +183,7 @@ function removeAllTiles() {
 
 function addTileToMap(loc,color) {
     var bounds = getTileBounds(loc);
-    var tile = L.rectangle(bounds, {color: "#"+color, weight: 1, fillOpacity: 0.8});
+    var tile = L.rectangle(bounds, {color: "#"+color, weight: 1, fillOpacity: 0.6});
     tile.addTo(map);
     tiles.push(tile);
 }
