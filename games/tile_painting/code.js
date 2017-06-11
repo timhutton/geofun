@@ -97,6 +97,8 @@ function getTileBounds(loc) {
 }
 
 function paintTile(color) {
+    // TODO: remove tile here if already one
+    addTileToMap(player.loc,color);
     var loc = getTileCenter(player.loc);
     var tile_spec = "latitude="+loc.lat.toFixed(5)+"&longitude="+loc.lng.toFixed(5)+"&accuracy=10&color="+color;
     if(console_debug) {
