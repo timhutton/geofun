@@ -99,6 +99,7 @@ function getTileBounds(loc) {
 function paintTile(color) {
     // TODO: remove tile here if already one
     addTileToMap(player.loc,color);
+    updateTileOutline();
     var loc = getTileCenter(player.loc);
     var tile_spec = "latitude="+loc.lat.toFixed(5)+"&longitude="+loc.lng.toFixed(5)+"&accuracy=10&color="+color;
     if(console_debug) {
@@ -124,11 +125,7 @@ function onLocationFound(e) {
         got_current_player_location = true;
         addCurrentPlayerSprites();
     }
-    if(typeof current_tile_outline !== 'undefined') {
-        map.removeLayer(current_tile_outline);
-    }
-    current_tile_outline = L.rectangle(getTileBounds(player.loc), {color: "#000000", weight: 1, fill: false});
-    current_tile_outline.addTo(map);
+    updateTileOutline();
     updatePlayerSprites();
     if(always_pan_to_user) {
         map.panTo(player.loc);
@@ -139,6 +136,14 @@ function onLocationFound(e) {
 
 function onLocationError(e) {
     console.log(e.message);
+}
+
+function updateTileOutline() {
+    if(typeof current_tile_outline !== 'undefined') {
+        map.removeLayer(current_tile_outline);
+    }
+    current_tile_outline = L.rectangle(getTileBounds(player.loc), {color: "#000000", weight: 1, fill: false});
+    current_tile_outline.addTo(map);
 }
 
 function requestLocation() {
@@ -174,6 +179,7 @@ function processTilesString(response) {
         var color = parts[2];
         addTileToMap(L.latLng(lat,lng),color);
     }
+    updateTileOutline();
 }
 
 function removeAllTiles() {
