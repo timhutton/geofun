@@ -32,7 +32,7 @@ setInterval( requestTiles,  tile_polling_interval_ms );
 setInterval( animatePulses, animation_interval_ms );
 setInterval( playerPulse,   pulse_interval_ms );
 
-var console_debug = true;
+var console_debug = false;
 
 //addButton("\uD83D\uDC41", "zoom to show all tiles", zoomToShowAll, map);
 addButton("\u272A", "go to my location", panToMyLocation, map);

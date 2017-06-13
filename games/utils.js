@@ -3,7 +3,6 @@ function postString(url,s) {
     xhr.open("POST", url, true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.send(s);
-    console.log('Sent:',s);
 }
 
 function getString(source_url,callback) {
@@ -98,7 +97,6 @@ function requestUsername(callback) {
         // 1) specified in url?
         var username = window.location.search.substring(1);
         writeUsernameToCookie(username);
-        console.log("Username read from url:",username);
         callback(username);
     }
     else {
@@ -109,17 +107,14 @@ function requestUsername(callback) {
                 // 3) else if cookies enabled, use a random string
                 username = Math.random().toString(36).substring(7)
                 writeUsernameToCookie(username);
-                console.log("Username created as random string:",username);
                 callback(username);
             }
             else {
                 // 4) else if cookies blocked, request from server
                 requestUsernameFromServer(function(s) { onUsernameReceived(s,callback); });
-                console.log("Requested username from name server.");
             }
         }
         else {
-            console.log("Username read from cookie:",username);
             callback(username);
         }
     }
@@ -127,7 +122,6 @@ function requestUsername(callback) {
 
 function onUsernameReceived(s,callback) {
     var username = s.split('\n')[0];
-    console.log("Username received from server:",username);
     callback(username);
 }
 
