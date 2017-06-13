@@ -16,8 +16,9 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
     id: 'mapbox.streets'
     }).addTo(map);
 
-getUsername();
-var player = new Player( username, defaultLoc );
+requestUsername(function(username) { player = new Player( username, defaultLoc ); });
+// TODO: problem if the user is blocking cookies and has no data access at this moment, they won't even see their location
+ 
 var got_current_player_location = false;
 var players = [];
 var other_players_sprites = [];

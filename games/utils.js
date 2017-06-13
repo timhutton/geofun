@@ -86,43 +86,59 @@ function eraseCookie(name) {
 }
 
 function readUsernameFromCookie() {
-    username = readCookie("username"); // might be undefined
+    return readCookie("username"); // might be null
 }
 
-function writeUsernameToCookie() {
+function writeUsernameToCookie(username) {
     createCookie("username",username); // no expiry
 }
 
-function getUsername() {
+function requestUsername(callback) {
     if(window.location.search) {
-        // specified in url?
-        username = window.location.search.substring(1);
-        writeUsernameToCookie();
+        // 1) specified in url?
+        var username = window.location.search.substring(1);
+        writeUsernameToCookie(username);
         console.log("Username read from url:",username);
+        callback(username);
     }
     else {
-        // saved in cookie?
-        readUsernameFromCookie();
+        // 2) saved in cookie?
+        var username = readUsernameFromCookie();
         if(username==null) {
-            // request from server
-            requestUsernameFromServer(onUsernameReceived);
-            // use a random string for now
-            username = Math.random().toString(36).substring(7)
-            writeUsernameToCookie(username);
-            console.log("Username created as random string:",username);
+            if(areCookiesEnabled()) {
+                // 3) else if cookies enabled, use a random string
+                username = Math.random().toString(36).substring(7)
+                writeUsernameToCookie(username);
+                console.log("Username created as random string:",username);
+                callback(username);
+            }
+            else {
+                // 4) else if cookies blocked, request from server
+                requestUsernameFromServer(function(s) { onUsernameReceived(s,callback); });
+                console.log("Requested username from name server.");
+            }
         }
         else {
             console.log("Username read from cookie:",username);
+            callback(username);
         }
     }
 }
 
-function onUsernameReceived(s) {
-    console.log("Username received from server:",s);
-    username = s;
-    writeUsernameToCookie();
+function onUsernameReceived(s,callback) {
+    var username = s.split('\n')[0];
+    console.log("Username received from server:",username);
+    callback(username);
 }
 
-function requestUsernameFromServer() {
-    getString("https://geofun.org.uk/name",onUsernameReceived);
+function requestUsernameFromServer(callback) {
+    getString("https://geofun.org.uk/name",callback);
+}
+
+function areCookiesEnabled() {
+    if (navigator.cookieEnabled) return true;
+    document.cookie = "cookietest=1";
+    var ret = document.cookie.indexOf("cookietest=") != -1;
+    document.cookie = "cookietest=1; expires=Thu, 01-Jan-1970 00:00:01 GMT"; // delete the test cookie
+    return ret;
 }
