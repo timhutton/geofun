@@ -3,8 +3,23 @@ function postString(url,s) {
     xhr.open("POST", url, true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.send(s);
-    if(console_debug)
-        console.log('Sent:',s);
+    console.log('Sent:',s);
+}
+
+function getString(source_url,callback) {
+    var HttpClient = function() {
+        this.get = function(url, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200)
+                    callback(xhr.responseText);
+            }
+            xhr.open( "GET", url, true );
+            xhr.send( null );
+        }
+    }
+    var client = new HttpClient();
+    client.get(source_url, callback);
 }
 
 function addButton(label,desc,func,map) {
@@ -43,4 +58,71 @@ function getDistanceAsString(m) {
     else {
         return m.toFixed(0)+"m";
     }
+}
+
+function createCookie(name,value,days) {
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime()+(days*24*60*60*1000));
+        var expires = "; expires="+date.toGMTString();
+    }
+    else var expires = "";
+    document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function readCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+
+function eraseCookie(name) {
+    createCookie(name,"",-1);
+}
+
+function readUsernameFromCookie() {
+    username = readCookie("username"); // might be undefined
+}
+
+function writeUsernameToCookie() {
+    createCookie("username",username); // no expiry
+}
+
+function getUsername() {
+    if(window.location.search) {
+        // specified in url?
+        username = window.location.search.substring(1);
+        writeUsernameToCookie();
+        console.log("Username read from url:",username);
+    }
+    else {
+        // saved in cookie?
+        readUsernameFromCookie();
+        if(username==null) {
+            // request from server
+            requestUsernameFromServer(onUsernameReceived);
+            // use a random string for now
+            username = Math.random().toString(36).substring(7)
+            writeUsernameToCookie(username);
+            console.log("Username created as random string:",username);
+        }
+        else {
+            console.log("Username read from cookie:",username);
+        }
+    }
+}
+
+function onUsernameReceived(s) {
+    console.log("Username received from server:",s);
+    username = s;
+    writeUsernameToCookie();
+}
+
+function requestUsernameFromServer() {
+    getString("https://geofun.org.uk/name",onUsernameReceived);
 }

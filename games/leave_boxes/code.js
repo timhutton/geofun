@@ -16,10 +16,7 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
     id: 'mapbox.streets'
     }).addTo(map);
 
-if(window.location.search)
-    username = window.location.search.substring(1);
-else
-    username = Math.random().toString(36).substring(7)
+getUsername();
 var player = new Player( username, defaultLoc );
 var got_current_player_location = false;
 var players = [];
@@ -117,9 +114,11 @@ function sendInsertString(s) {
 }
 
 function sendPlayerLocation() {
-    var post_string = "oid="+player.id+"&type=user&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6)+"&accuracy="+player.accuracy_m.toFixed(0);
-    sendInsertString(post_string);
-    // TODO: slot1=blah&slot2=blah..slot5=blah
+    if(got_current_player_location) {
+        var post_string = "oid="+player.id+"&type=user&latitude="+player.loc.lat.toFixed(6)+"&longitude="+player.loc.lng.toFixed(6)+"&accuracy="+player.accuracy_m.toFixed(0);
+        sendInsertString(post_string);
+        // TODO: slot1=blah&slot2=blah..slot5=blah
+    }
 }
 
 function placeBox() {
@@ -138,19 +137,7 @@ function requestLocation() {
 }
 
 function requestPlayersString() {
-    var HttpClient = function() {
-        this.get = function(url, callback) {
-            var xhr = new XMLHttpRequest();
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState == 4 && xhr.status == 200)
-                    callback(xhr.responseText);
-            }
-            xhr.open( "GET", url, true );
-            xhr.send( null );
-        }
-    }
-    var client = new HttpClient();
-    client.get('https://geofun.org.uk/data', processPlayersString);
+    getString("https://geofun.org.uk/data", processPlayersString);
 }
 
 function processPlayersString(response) {
@@ -309,4 +296,3 @@ function removePulses() {
     }
     pulses=[];
 }
-
