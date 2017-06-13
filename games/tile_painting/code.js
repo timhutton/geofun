@@ -164,7 +164,7 @@ function requestTiles() {
     }
     var client = new HttpClient();
     // TODO: use a more sensible bounding box - e.g current map view but cache old tiles?
-    client.get('https://geofun.org.uk/paint/get/centres?latitude_min=41&latitude_max=63&longitude_min=-10&longitude_max=10', processTilesString);
+    client.get('https://geofun.org.uk/paint/get/centres?latitude_min=-90&latitude_max=90&longitude_min=-180&longitude_max=180', processTilesString);
 }
 
 function processTilesString(response) {
