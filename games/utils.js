@@ -59,58 +59,54 @@ function getDistanceAsString(m) {
     }
 }
 
-function createCookie(name,value,days) {
-    if (days) {
-        var date = new Date();
-        date.setTime(date.getTime()+(days*24*60*60*1000));
-        var expires = "; expires="+date.toGMTString();
+function isLocalStorageAvailable() {
+    var test = 'test';
+    try {
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+    } catch(e) {
+        return false;
     }
-    else var expires = "";
-    document.cookie = name+"="+value+expires+"; path=/";
 }
 
-function readCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1,c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+function readUsernameFromLocalStorage() {
+    try {
+        return localStorage.getItem("username");
+    } catch(e) {
+        console.log("Error getting localStorage:",e);
+        return null;
     }
-    return null;
 }
 
-function eraseCookie(name) {
-    createCookie(name,"",-1);
-}
-
-function readUsernameFromCookie() {
-    return readCookie("username"); // might be null
-}
-
-function writeUsernameToCookie(username) {
-    createCookie("username",username); // no expiry
+function writeUsernameToLocalStorage(username) {
+    try {
+        localStorage.setItem("username",username);
+    } catch(e) {
+        console.log("Error setting localStorage:",e);
+        return false;
+    }
 }
 
 function requestUsername(callback) {
     if(window.location.search) {
         // 1) specified in url?
         var username = window.location.search.substring(1);
-        writeUsernameToCookie(username);
+        writeUsernameToLocalStorage(username);
         callback(username);
     }
     else {
-        // 2) saved in cookie?
-        var username = readUsernameFromCookie();
+        // 2) saved in localStorage?
+        var username = readUsernameFromLocalStorage();
         if(username==null) {
-            if(areCookiesEnabled()) {
-                // 3) else if cookies enabled, use a random string
+            if(isLocalStorageAvailable()) {
+                // 3) else if localStorage enabled, use a random string
                 username = Math.random().toString(36).substring(7)
-                writeUsernameToCookie(username);
+                writeUsernameToLocalStorage(username);
                 callback(username);
             }
             else {
-                // 4) else if cookies blocked, request from server
+                // 4) else if localStorage blocked, request from server
                 requestUsernameFromServer(function(s) { onUsernameReceived(s,callback); });
             }
         }
@@ -127,12 +123,4 @@ function onUsernameReceived(s,callback) {
 
 function requestUsernameFromServer(callback) {
     getString("https://geofun.org.uk/name",callback);
-}
-
-function areCookiesEnabled() {
-    if (navigator.cookieEnabled) return true;
-    document.cookie = "cookietest=1";
-    var ret = document.cookie.indexOf("cookietest=") != -1;
-    document.cookie = "cookietest=1; expires=Thu, 01-Jan-1970 00:00:01 GMT"; // delete the test cookie
-    return ret;
 }
