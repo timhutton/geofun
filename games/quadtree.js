@@ -25,7 +25,6 @@ function QuadTree(boundary) {
     this.MAX_POINTS = 10;
     this.points=[];
     this.children=[]; // empty or size 4: NW, NE, SW, SE
-    this.last_updated = 0; // milliseconds since 1970
 }
 
 // insert any object that has a member p of type XY
@@ -56,7 +55,7 @@ QuadTree.prototype.subdivide = function() {
                     new XY(this.boundary.center.x-r,this.boundary.center.y+r),
                     new XY(this.boundary.center.x+r,this.boundary.center.y+r) ];
     for(var i=0;i<centers.length;i++) {
-        this.children.push(new QuadTree(new AABB(centers[i].r)));
+        this.children.push(new QuadTree(new AABB(centers[i],r)));
     }
 }
 
