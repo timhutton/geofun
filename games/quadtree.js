@@ -23,7 +23,7 @@ AABB.prototype.intersectsAABB = function(other) {
 
 function QuadTree(boundary) {
     this.boundary = boundary;
-    this.MAX_POINTS = 10;
+    this.MAX_POINTS = 1;
     this.points = [];
     this.children = []; // empty or size 4: NW, NE, SW, SE
     this.updated = 0; // milliseconds since 1970
@@ -87,4 +87,13 @@ QuadTree.prototype.queryAreaSince = function(boundary,since) {
         pts.push(...this.children[i].queryAreaSince(boundary,since));
     }
     return pts;
+}
+
+QuadTree.prototype.debugGetAllQuads = function() {
+    var quads = [];
+    quads.push(this.boundary);
+    for(var i = 0; i < this.children.length; i++) {
+        quads.push(...this.children[i].debugGetAllQuads());
+    }
+    return quads;
 }
