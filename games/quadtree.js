@@ -89,6 +89,29 @@ QuadTree.prototype.queryAreaSince = function(boundary,since) {
     return pts;
 }
 
+// 'boundary' is AABB, 'since' is int containing milliseconds since 1970
+QuadTree.prototype.getNumChangedSince = function(boundary,since) {
+    var n = 0;
+    if(this.updated < since) {
+        // nothing in this quad has been updated since the time specified
+        return n;
+    }
+    if(!this.boundary.intersectsAABB(boundary)) {
+        // nothing in this quad is inside the area specified
+        return n;
+    }
+    for(var i = 0; i < this.points.length; i++) {
+        var obj = this.points[i];
+        if(obj.updated > since && boundary.containsPoint(obj.p)) {
+            n++;
+        }
+    }
+    for(var i = 0; i < this.children.length; i++) {
+        n += this.children[i].queryAreaSince(boundary,since);
+    }
+    return n;
+}
+
 QuadTree.prototype.debugGetAllQuads = function() {
     var quads = [];
     quads.push(this.boundary);
