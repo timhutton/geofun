@@ -10,7 +10,7 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
     id: 'mapbox.light'
     }).addTo(map);
 
-addButton("\u272A", "add random point", addRandomPoint, map);
+addButton("\u272A", "add random points", addRandomPoints, map);
 quadtree = new QuadTree(new AABB(new XY(0,0),180,85));
 quad_layers = []
 
@@ -37,7 +37,7 @@ function drawQuad(q) {
 }
 
 
-function addRandomPoint() {
+function addRandomPoints() {
     for(var i=0;i<10;i++) {
         var obj = { p: new XY(randn_bm()*30,randn_bm()*30), updated: 0 };
         quadtree.insert(obj);
