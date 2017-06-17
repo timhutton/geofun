@@ -11,8 +11,10 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
     }).addTo(map);
 
 addButton("\u272A", "add random points", addRandomPoints, map);
-quadtree = new QuadTree(new AABB(new XY(0,0),180,85));
-quad_layers = []
+var x_range = 20026376.39;
+var y_range = 20048966.10;
+var quadtree = new QuadTree(new AABB(new XY(0,0),x_range,y_range));
+var quad_layers = []
 
 function eraseQuads() {
     for(var i=0;i<quad_layers.length;i++) {
@@ -29,8 +31,9 @@ function drawQuads() {
 }
 
 function drawQuad(q) {
-    var bounds = [[q.center.y-q.y_radius,q.center.x-q.x_radius],
-                  [q.center.y+q.y_radius,q.center.x+q.x_radius]];
+    var p1 = L.Projection.SphericalMercator.unproject(new L.Point(q.center.x-q.x_radius,q.center.y-q.y_radius));
+    var p2 = L.Projection.SphericalMercator.unproject(new L.Point(q.center.x+q.x_radius,q.center.y+q.y_radius));
+    var bounds = [[p1.lat,p1.lng],[p2.lat,p2.lng]];
     var quad_layer = L.rectangle(bounds,{color:"#000000",weight:1,fill:false});
     quad_layer.addTo(map);
     quad_layers.push(quad_layer);
@@ -39,9 +42,9 @@ function drawQuad(q) {
 
 function addRandomPoints() {
     for(var i=0;i<10;i++) {
-        var obj = { p: new XY(randn_bm()*30,randn_bm()*30), updated: 0 };
+        var obj = { p: new XY(randn_bm()*1000000,randn_bm()*1000000), updated: 0 };
         quadtree.insert(obj);
-        L.circle(new L.LatLng(obj.p.y,obj.p.x),10).addTo(map);
+        L.circle(L.Projection.SphericalMercator.unproject(obj.p),10).addTo(map);
     }
     eraseQuads();
     drawQuads();
