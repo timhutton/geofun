@@ -1,3 +1,12 @@
+// Testing our quadtree implementation
+
+// TODO: Use Point coordinates for square tiles. Store in quadtree as integers to avoid ambiguity.
+
+// TODO: Have two quadtrees one as a server, the other as a client, updating itself. Check
+// that can get reasonable updating behavior with low bandwidth even when the server has 
+// many tiles.
+
+// TODO: As above but cache locally to save on startup time.
 
 var defaultLoc = L.latLng(52.185, 0.176); // a default view of Cambridge
 var map = L.map('map').setView(defaultLoc,0);

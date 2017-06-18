@@ -1,3 +1,5 @@
+// TODO: allow replacing tiles
+
 function QuadTree(boundary) {
     this.boundary = boundary;
     this.MAX_POINTS = 1;
