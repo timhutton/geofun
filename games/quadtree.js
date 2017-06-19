@@ -86,7 +86,7 @@ QuadTree.prototype.getNumChangedSince = function(boundary,since) {
         }
     }
     for(var i = 0; i < this.children.length; i++) {
-        n += this.children[i].queryAreaSince(boundary,since);
+        n += this.children[i].getNumChangedSince(boundary,since);
     }
     return n;
 }
