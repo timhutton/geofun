@@ -8,6 +8,9 @@
 
 // TODO: As above but cache locally to save on startup time.
 
+// TODO: To answer question of how many changed since time t, consider storing on each quad an approximate integral, e.g. 0 changed
+// within the last 10s, 1 changed within the last 100s, 10 changed within the last 1000s.
+
 var defaultLoc = L.latLng(52.185, 0.176); // a default view of Cambridge
 var map = L.map('map').setView(defaultLoc,0);
 
