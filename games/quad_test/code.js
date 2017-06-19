@@ -25,8 +25,9 @@ map.on('dragend', updateTileOutline );
 
 
 addButton("\u272A", "add random points", addRandomPoints, map);
-var x_range = 20026376.39; // tiles with centers at 324n units in this coordinate system, with n in [-61809, 61809]
-var y_range = 20048966.10; // likewise with n in [-61879, 61879]
+// WebMercator has x_range +/- 20026376.39 and y_range +/- 20048966.10
+var x_range = 61809; // tiles with centers at 324n units in this coordinate system, with n in [-61809, 61809] 
+var y_range = 61879; // likewise with n in [-61879, 61879]
 var quadtree = new QuadTree(new AABB(new XY(0,0),x_range,y_range));
 var quad_layers = []
 
@@ -71,10 +72,9 @@ function drawQuads() {
 }
 
 function drawQuad(q) {
-    var p1 = L.Projection.SphericalMercator.unproject(new L.Point(q.center.x-q.x_radius,q.center.y-q.y_radius));
-    var p2 = L.Projection.SphericalMercator.unproject(new L.Point(q.center.x+q.x_radius,q.center.y+q.y_radius));
-    var bounds = [[p1.lat,p1.lng],[p2.lat,p2.lng]];
-    var quad_layer = L.rectangle(bounds,{color:"#000000",weight:1,fill:false});
+    var p1 = tileIndicesToLatLng({ x: q.center.x-q.x_radius, y: q.center.y-q.y_radius });
+    var p2 = tileIndicesToLatLng({ x: q.center.x+q.x_radius, y: q.center.y+q.y_radius });
+    var quad_layer = L.rectangle([p1,p2],{color:"#000000",weight:1,fill:false});
     quad_layer.addTo(map);
     quad_layers.push(quad_layer);
 }
@@ -82,16 +82,14 @@ function drawQuad(q) {
 
 function addRandomPoints() {
     for(var i=0;i<10;i++) {
-        var obj = { p: new XY(randn_bm()*1000000,randn_bm()*1000000), updated: 0 };
+        var obj = { p: new XY(getRandomInt(-x_range,x_range),getRandomInt(-y_range,y_range)), updated: 0 };
         quadtree.insert(obj);
-        L.circle(L.Projection.SphericalMercator.unproject(obj.p),10).addTo(map);
+        L.circle(tileIndicesToLatLng(obj.p),10).addTo(map);
     }
     eraseQuads();
     drawQuads();
 }
 
-function randn_bm() {
-    var u = 1 - Math.random(); // Subtraction to flip [0, 1) to (0, 1].
-    var v = 1 - Math.random();
-    return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
