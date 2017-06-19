@@ -1,10 +1,10 @@
-// Testing our quadtree implementation
+ // Testing our quadtree implementation
 
-// TODO: Use Point coordinates for square tiles. Store in quadtree as integers to avoid ambiguity.
+// TODO: Use Point coordinates for square tiles. Store in quadtree as integers to avoid ambiguity. Replace tiles when updated.
 
 // TODO: Have two quadtrees one as a server, the other as a client, updating itself. Check
 // that can get reasonable updating behavior with low bandwidth even when the server has 
-// many tiles.
+// many tiles. Mark higher level quads as checked but too many tiles to update.
 
 // TODO: As above but cache locally to save on startup time.
 
