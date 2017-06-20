@@ -1,8 +1,8 @@
- // Testing our quadtree implementation
+ // Testing our tiletree implementation
 
 // TODO: Replace tiles when updated.
 
-// TODO: Have two quadtrees one as a server, the other as a client, updating itself. Check
+// TODO: Have two tiletree one as a server, the other as a client, updating itself. Check
 // that can get reasonable updating behavior with low bandwidth even when the server has
 // many tiles. Mark higher level quads as checked but too many tiles to update.
 
@@ -28,7 +28,7 @@ addButton("\u272A", "add random points", addRandomPoints, map);
 // WebMercator has x_range +/- 20026376.39 and y_range +/- 20048966.10
 var x_range = 61809; // tiles with centers at 324n units in this coordinate system, with n in [-61809, 61809]
 var y_range = 61879; // likewise with n in [-61879, 61879]
-var quadtree = new QuadTree(new AABB(new XY(0,0),x_range,y_range));
+var quadtree = new TileTree(new AABB(new XY(0,0),x_range,y_range));
 var quad_layers = []
 
 function latLngToTileIndices(latlng) {

@@ -1,4 +1,6 @@
-function QuadTree(boundary) {
+// TODO: allow replacing tiles
+
+function TileTree(boundary) {
     this.boundary = boundary;
     this.MAX_POINTS = 1;
     this.points = [];
@@ -7,7 +9,7 @@ function QuadTree(boundary) {
 }
 
 // obj has at least: { XY p; int updated; }
-QuadTree.prototype.insert = function(obj) {
+TileTree.prototype.insert = function(obj) {
     if(!this.boundary.containsPoint(obj.p)) {
         return false; // point is outside our region
     }
@@ -31,7 +33,7 @@ QuadTree.prototype.insert = function(obj) {
     return false;
 }
 
-QuadTree.prototype.subdivide = function() {
+TileTree.prototype.subdivide = function() {
     var xr = this.boundary.x_radius / 2;
     var yr = this.boundary.y_radius / 2;
     var centers = [ new XY(this.boundary.center.x-xr,this.boundary.center.y-yr),
@@ -39,12 +41,12 @@ QuadTree.prototype.subdivide = function() {
                     new XY(this.boundary.center.x-xr,this.boundary.center.y+yr),
                     new XY(this.boundary.center.x+xr,this.boundary.center.y+yr) ];
     for(var i=0;i<centers.length;i++) {
-        this.children.push(new QuadTree(new AABB(centers[i],xr,yr)));
+        this.children.push(new TileTree(new AABB(centers[i],xr,yr)));
     }
 }
 
 // 'boundary' is AABB, 'since' is int containing milliseconds since 1970
-QuadTree.prototype.queryAreaSince = function(boundary,since) {
+TileTree.prototype.queryAreaSince = function(boundary,since) {
     var pts = [];
     if(this.updated < since) {
         // nothing in this quad has been updated since the time specified
@@ -67,7 +69,7 @@ QuadTree.prototype.queryAreaSince = function(boundary,since) {
 }
 
 // 'boundary' is AABB, 'since' is int containing milliseconds since 1970
-QuadTree.prototype.getNumChangedSince = function(boundary,since) {
+TileTree.prototype.getNumChangedSince = function(boundary,since) {
     var n = 0;
     if(this.updated < since) {
         // nothing in this quad has been updated since the time specified
@@ -89,7 +91,7 @@ QuadTree.prototype.getNumChangedSince = function(boundary,since) {
     return n;
 }
 
-QuadTree.prototype.debugGetAllQuads = function() {
+TileTree.prototype.debugGetAllQuads = function() {
     var quads = [];
     quads.push(this.boundary);
     for(var i = 0; i < this.children.length; i++) {
