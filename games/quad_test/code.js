@@ -1,13 +1,14 @@
 // Testing our tiletree implementation
 
-// TODO: Have two tiletree one as a server, the other as a client, updating itself. Check
+// TODO: Have two tiletrees - one as a server, the other as a client, updating itself. Check
 // that can get reasonable updating behavior with low bandwidth even when the server has
-// many tiles. Mark higher level quads as checked but too many tiles to update.
+// many tiles. Have client mark higher level quads as 'checked at time t but too many tiles to update'.
 
-// TODO: As above but cache locally to save on startup time.
+// TODO: As above but cache client locally to save on startup time.
 
-// TODO: To answer question of how many changed since time t, consider storing on each quad an approximate integral, e.g. 0 changed
-// within the last 10s, 1 changed within the last 100s, 10 changed within the last 1000s.
+// TODO: To answer question of how many changed since time t, consider having the server store on each quad an approximate integral, e.g. 0 changed
+// within the last 10s, 1 changed within the last 100s, 102 changed within the last 1000s. Then if the client wants to know what has changed since 2000
+// seconds ago the immediate answer is "too many" (assuming 102 > TOO_MANY).
 
 var defaultLoc = L.latLng(52.185, 0.176); // a default view of Cambridge
 var map = L.map('map').setView(defaultLoc,14);
@@ -22,18 +23,25 @@ L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=p
 map.on('dragend', updateTileOutline );
 map.on('zoomend', updateTileOutline );
 updateTileOutline();
+last_updated = 0;
 
 addColorPaintButton("#F1433F", paintTile, map);
 addColorPaintButton("#F7E967", paintTile, map);
 addColorPaintButton("#A9CF54", paintTile, map);
 addColorPaintButton("#70B7BA", paintTile, map);
 addColorPaintButton("#3D4C53", paintTile, map);
+addButton("?", "check for updates", checkForUpdates, map);
 // WebMercator has x_range +/- 20026376.39 and y_range +/- 20048966.10
 var x_range = 61809; // tiles with centers at 324n units in this coordinate system, with n in [-61809, 61809]
 var y_range = 61879; // likewise with n in [-61879, 61879]
 var tiletree = new TileTree(-x_range,-y_range,x_range*2+1,y_range*2+1);
 var quad_layers = []
 var tile_layers = []
+
+function checkForUpdates() {
+    console.log(tiletree.getTilesChangedSince(last_updated));
+    last_updated = new Date().getTime();
+}
 
 function addColorPaintButton(color,func,map) {
     var button = L.Control.extend({
@@ -135,8 +143,8 @@ function drawTile(t) {
 }
 
 function paintTile(color) {
-    var obj = { p: latLngToTileIndices(map.getCenter()), updated: 0 };
-    tiletree.setTile(obj.p.x,obj.p.y,color);
+    var obj = { p: latLngToTileIndices(map.getCenter()), updated: new Date().getTime() };
+    tiletree.setTile(obj.p.x, obj.p.y, color, obj.updated);
     eraseQuads();
     drawQuads();
     eraseTiles();

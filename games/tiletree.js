@@ -32,33 +32,67 @@ TileTree.prototype.subdivide = function() {
     }
 }
 
-TileTree.prototype.setTile = function(ix,iy,color) {
+TileTree.prototype.setTile = function(ix,iy,color,time) {
     if( ix < this.x_min || ix >= this.x_min+this.num_x || iy < this.y_min || iy >= this.y_min+this.num_y ) {
         return false; // tile center is outside our region
     }
     if(this.isLeafNode()) {
         this.color = color;
         this.has_tile = true;
-        //this.updated = timenow; TODO
+        this.updated = time;
         return true;
     }
     if(this.children.length==0) {
         this.subdivide();
     }
     for(var i=0;i<this.children.length;i++) {
-        if(this.children[i].setTile(ix,iy,color)) {
+        if(this.children[i].setTile(ix,iy,color,time)) {
             // keep track of when any point in any child quad was updated
-            //this.updated = Math.max(this.updated, obj.updated); TODO
+            this.updated = time;
             return true;
         }
     }
-    console.log("Internal error in TileTree.");
+    console.log("Internal error in TileTree.setTile()");
+}
+
+TileTree.prototype.getTilesChangedSince = function(time) {
+    // return the tiles in this quad modified since the time given, if not too many
+    // TODO: time integral to give quick "too many"
+    var TOO_MANY = 100;
+    if( time > this.updated ) {
+        return { too_many:false, tiles:[] }; // nothing modified since the time given
+    }
+    if(this.isLeafNode()) {
+        if(this.has_tile) {
+            return { too_many:false, tiles:[this.getTile()]}; // leaf node with a tile
+        }
+        else {
+            return { too_many:false, tiles:[] }; // empty leaf node
+        }
+    }
+    var tiles = [];
+    for(var i=0;i<this.children.length;i++) {
+        var child_tiles = this.children[i].getTilesChangedSince(time);
+        if(child_tiles.too_many || tiles.length+child_tiles.tiles.length > TOO_MANY) {
+            return { too_many:true, tiles:[] }; // too many tiles to send
+        }
+        tiles.push(...child_tiles.tiles);
+    }
+    return {too_many:false, tiles:tiles}; // sensible number of tiles to send
+}
+
+TileTree.prototype.getTile = function() {
+    return { aabb:new AABB(new XY(this.x_min,this.y_min),0.5,0.5), color:this.color };
+}
+
+TileTree.prototype.getTileAABB = function() {
+    return new AABB(new XY(this.x_min,this.y_min),0.5,0.5);
 }
 
 TileTree.prototype.debugGetAllTiles = function() {
     var tiles = [];
     if(this.isLeafNode() && this.has_tile) {
-        tiles.push({ aabb: new AABB(new XY(this.x_min,this.y_min),0.5,0.5), color: this.color });
+        tiles.push(this.getTile());
     }
     for(var i = 0; i < this.children.length; i++) {
         tiles.push(...this.children[i].debugGetAllTiles());
