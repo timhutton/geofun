@@ -28,7 +28,7 @@ addButton("\u272A", "add random points", addRandomPoints, map);
 // WebMercator has x_range +/- 20026376.39 and y_range +/- 20048966.10
 var x_range = 61809; // tiles with centers at 324n units in this coordinate system, with n in [-61809, 61809]
 var y_range = 61879; // likewise with n in [-61879, 61879]
-var quadtree = new TileTree(new AABB(new XY(0,0),x_range,y_range));
+var quadtree = new QuadTree(new AABB(new XY(0,0),x_range,y_range));
 var quad_layers = []
 
 function latLngToTileIndices(latlng) {
