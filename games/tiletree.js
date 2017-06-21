@@ -6,6 +6,7 @@ function TileTree(x_min,y_min,num_x,num_y) {
     this.num_y = num_y;
     this.children = []; // empty or size 4: NW, NE, SW, SE
     this.updated = 0; // milliseconds since 1970
+    this.has_tile = false;
 }
 
 TileTree.prototype.isLeafNode = function() {
@@ -37,6 +38,7 @@ TileTree.prototype.setTile = function(ix,iy,color) {
     }
     if(this.isLeafNode()) {
         this.color = color;
+        this.has_tile = true;
         //this.updated = timenow; TODO
         return true;
     }
@@ -51,4 +53,24 @@ TileTree.prototype.setTile = function(ix,iy,color) {
         }
     }
     console.log("Internal error in TileTree.");
+}
+
+TileTree.prototype.debugGetAllTiles = function() {
+    var tiles = [];
+    if(this.isLeafNode() && this.has_tile) {
+        tiles.push({ aabb: new AABB(new XY(this.x_min,this.y_min),0.5,0.5), color: this.color });
+    }
+    for(var i = 0; i < this.children.length; i++) {
+        tiles.push(...this.children[i].debugGetAllTiles());
+    }
+    return tiles;
+}
+
+TileTree.prototype.debugGetAllQuads = function() {
+    var quads = [];
+    quads.push(new AABB(new XY(this.x_min+this.num_x/2-0.5,this.y_min+this.num_y/2-0.5),this.num_x/2,this.num_y/2));
+    for(var i = 0; i < this.children.length; i++) {
+        quads.push(...this.children[i].debugGetAllQuads());
+    }
+    return quads;
 }
